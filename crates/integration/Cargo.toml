@@ -1,0 +1,11 @@
+[package]
+name = "integration"
+version = "0.1.0"
+description = "Integration tests for the release_util crate"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+git2 = { workspace = true, features = ["vendored-openssl", "vendored-libgit2"] }
+tempfile.workspace = true
+nanoid.workspace = true
