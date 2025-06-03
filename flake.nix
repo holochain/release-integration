@@ -31,8 +31,10 @@
               packages = with pkgs; [
                 (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
                 git
-                release-plz
+                git-cliff
                 cargo-semver-checks
+                httpie
+                gitea
               ];
             };
           };
