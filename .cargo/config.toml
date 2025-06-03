@@ -1,0 +1,14 @@
+[registries.dev-registry]
+index = "sparse+http://localhost:8000/api/v1/crates/"
+credential-provider = ["cargo:token"]
+# A dev-only token, safe to check in
+token = "3H2hNKfAVd5ybr9RCQVMM8bSJCHt6oFm"
+
+[registry]
+default = "dev-registry"
+
+[source.crates-io]
+replace-with = "dev-registry2"
+
+[source.dev-registry2]
+registry = "sparse+http://localhost:8000/api/v1/crates/"
