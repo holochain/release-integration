@@ -35,6 +35,7 @@
                 cargo-semver-checks
                 httpie
                 gitea
+                initool
               ];
             };
           };
