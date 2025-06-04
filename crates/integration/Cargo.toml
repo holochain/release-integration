@@ -9,3 +9,4 @@ license.workspace = true
 git2 = { workspace = true, features = ["vendored-openssl", "vendored-libgit2"] }
 tempfile.workspace = true
 nanoid.workspace = true
+serde_json.workspace = true
