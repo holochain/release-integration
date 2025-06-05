@@ -1,5 +1,5 @@
 use git2::{IndexAddOption, ObjectType, RemoteCallbacks, Repository, RepositoryInitOptions};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 fn git_token() -> String {
@@ -173,6 +173,16 @@ impl TestHarness {
             .expect("Failed to push tag to remote");
     }
 
+    pub fn add_standard_gitignore(&self) {
+        self.write_file_content(
+            ".gitignore",
+            r#"target/
+            "#,
+        );
+
+        self.commit(".gitignore", "chore: add standard .gitignore");
+    }
+
     pub fn add_crate(&self, crate_model: CrateModel) {
         self.write_file_content(
             "Cargo.toml",
@@ -205,39 +215,142 @@ edition = "2024"
             ),
         );
 
-        let source_path = self.temp_dir.path().join("src");
-        let entry_path = if crate_model.binary {
-            source_path.join("main.rs")
-        } else {
-            source_path.join("lib.rs")
-        };
+        self.add_crate_src_at_path(&crate_model, self.temp_dir.path());
+    }
 
-        if let Some(content) = &crate_model.content {
-            self.write_file_content(entry_path.to_str().unwrap(), content);
-        } else if crate_model.binary {
+    pub fn add_workspace(&self, workspace_model: CargoWorkspaceModel) {
+        self.write_file_content(
+            "Cargo.toml",
+            &format!(
+                r#"[workspace]
+members = [
+    {}
+]
+resolver = "3"
+
+[workspace.package]
+version = "{}"
+edition = "2024"
+{}
+{}
+"#,
+                workspace_model
+                    .crates
+                    .iter()
+                    .map(|c| format!("\"crates/{}\"", c.name))
+                    .collect::<Vec<_>>()
+                    .join(",\n    "),
+                workspace_model
+                    .crates
+                    .first()
+                    .as_ref()
+                    .expect("No crates in workspace")
+                    .version,
+                if let Some(repository) = workspace_model
+                    .crates
+                    .first()
+                    .as_ref()
+                    .expect("No crates in workspace")
+                    .repository
+                    .as_ref()
+                {
+                    format!("repository = \"{}\"", repository)
+                } else {
+                    String::new()
+                },
+                if let Some(license) = workspace_model
+                    .crates
+                    .first()
+                    .as_ref()
+                    .expect("No crates in workspace")
+                    .license
+                    .as_ref()
+                {
+                    format!("license = \"{}\"", license)
+                } else {
+                    String::new()
+                },
+            ),
+        );
+
+        for crate_model in &workspace_model.crates {
             self.write_file_content(
-                entry_path.to_str().unwrap(),
-                "fn main() { println!(\"hello binary\"); }",
+                &format!("crates/{}/Cargo.toml", crate_model.name),
+                &format!(
+                    r#"[package]
+name = "{}"
+{}
+version.workspace = true
+edition.workspace = true
+{}
+{}
+        "#,
+                    crate_model.name,
+                    if let Some(description) = &crate_model.description {
+                        format!("description = \"{}\"", description)
+                    } else {
+                        String::new()
+                    },
+                    if crate_model.repository.is_some() {
+                        "repository.workspace = true".to_string()
+                    } else {
+                        String::new()
+                    },
+                    if crate_model.license.is_some() {
+                        "license.workspace = true".to_string()
+                    } else {
+                        String::new()
+                    },
+                ),
             );
-        } else {
-            self.write_file_content(
-                entry_path.to_str().unwrap(),
-                "// This is a placeholder for the crate content",
+
+            self.add_crate_src_at_path(
+                crate_model,
+                self.temp_dir.path().join("crates").join(&crate_model.name),
             );
         }
+    }
+
+    pub fn verify_cargo_project(&self, path: &str) {
+        let path = self.temp_dir.path().join(path);
+
+        let exit_status = std::process::Command::new("cargo")
+            .current_dir(&path)
+            .arg("clippy")
+            .arg("--all-targets")
+            .arg("--")
+            .arg("--deny")
+            .arg("warnings")
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .unwrap()
+            .wait();
+
+        assert!(
+            exit_status.unwrap().success(),
+            "Cargo clippy failed for project at {}",
+            path.display()
+        );
     }
 
     pub fn generate_changelog(
         &self,
         changelog_config: ChangelogConfig,
         bump_type: BumpType,
+        tag_pattern: Option<String>,
+        path: &str,
     ) -> String {
         let configure_command = |command: &mut std::process::Command| {
             command
-                .current_dir(self.temp_dir.path())
+                .current_dir(self.temp_dir.path().join(path))
                 .arg("--config")
                 .arg(changelog_config.path())
                 .arg("--use-branch-tags");
+
+            if let Some(tag_pattern) = &tag_pattern {
+                command.arg("--tag-pattern").arg(tag_pattern);
+            }
 
             match bump_type {
                 BumpType::Auto => command.arg("--bump"),
@@ -294,6 +407,29 @@ edition = "2024"
     pub fn retain(self) {
         let path = self.temp_dir.keep();
         println!("Repository retained at: {}", path.display());
+    }
+
+    fn add_crate_src_at_path(&self, crate_model: &CrateModel, path: impl AsRef<Path>) {
+        let source_path = path.as_ref().join("src");
+        let entry_path = if crate_model.binary {
+            source_path.join("main.rs")
+        } else {
+            source_path.join("lib.rs")
+        };
+
+        if let Some(content) = &crate_model.content {
+            self.write_file_content(entry_path.to_str().unwrap(), content);
+        } else if crate_model.binary {
+            self.write_file_content(
+                entry_path.to_str().unwrap(),
+                "fn main() { println!(\"hello binary\"); }",
+            );
+        } else {
+            self.write_file_content(
+                entry_path.to_str().unwrap(),
+                "// This is a placeholder for the crate content",
+            );
+        }
     }
 
     fn make_cb<'a>() -> RemoteCallbacks<'a> {
@@ -356,6 +492,18 @@ impl CrateModel {
 
     pub fn with_content(mut self, content: &str) -> Self {
         self.content = Some(content.to_string());
+        self
+    }
+}
+
+#[derive(Default)]
+pub struct CargoWorkspaceModel {
+    pub crates: Vec<CrateModel>,
+}
+
+impl CargoWorkspaceModel {
+    pub fn add_crate(mut self, crate_model: CrateModel) -> Self {
+        self.crates.push(crate_model);
         self
     }
 }
