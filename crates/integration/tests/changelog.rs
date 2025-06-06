@@ -239,7 +239,7 @@ pub fn subtract(a: i32, b: i32) -> i32 { a - b }
 /// A workspace that needs to produce pre-release versions.
 ///
 /// With this test, we get:
-/// - It's possible for switch to a pre-release version in a workspace.
+/// - It's possible to switch to a pre-release version in a workspace.
 /// - Can switch back to a release version after pre-release versions.
 /// - Correctly gather changes, ignoring pre-release versions, to produce an aggregated change set.
 #[test]
