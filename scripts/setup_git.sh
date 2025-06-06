@@ -4,7 +4,9 @@ set -eu
 
 script_dir=$(dirname "$0")
 
+set +e
 rm "$script_dir/git_test_token.txt" || true
+set -e
 
 docker compose exec --user 1000:1000 gitea \
   gitea admin user create --admin --username gituser --password pass --email gituser@holochain.org

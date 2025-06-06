@@ -622,9 +622,7 @@ fn version_across_release_branches() {
     //
     // Now switch back to the release branch and make a change
     //
-    harness.git_status();
     harness.switch_branch("release/0.1.x");
-    harness.git_status();
     harness.write_file_content(
         "src/lib.rs",
         "/// It adds numbers\npub fn add(a: i32, b: i32) -> i32 { a + b }",
@@ -636,7 +634,6 @@ fn version_across_release_branches() {
     //
     // Generate the changelog for the new version
     //
-    harness.git_status();
     let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
     assert_eq!(version, "v0.1.2");
 

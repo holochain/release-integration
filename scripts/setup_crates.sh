@@ -4,8 +4,10 @@ set -eu
 
 script_dir=$(dirname "$0")
 
+set +e
 rm "$script_dir/session.json" || true
 rm "$script_dir/crates_test_token.txt" || true
+set -e
 
 http POST http://localhost:8000/api/v1/user/login \
   --session="$script_dir/session.json" \
