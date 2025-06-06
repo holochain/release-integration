@@ -18,13 +18,6 @@ pub enum ChangelogConfig {
     Pre1Point0Cliff,
 }
 
-#[derive(Default)]
-pub enum BumpType {
-    #[default]
-    Auto,
-    Minor,
-}
-
 impl ChangelogConfig {
     pub fn path(&self) -> PathBuf {
         let dir = std::env::current_dir().unwrap();
@@ -337,32 +330,37 @@ edition.workspace = true
     pub fn generate_changelog(
         &self,
         changelog_config: ChangelogConfig,
-        bump_type: BumpType,
-        tag_pattern: Option<String>,
-        path: &str,
+        force_tag: Option<String>,
     ) -> String {
         let configure_command = |command: &mut std::process::Command| {
             command
-                .current_dir(self.temp_dir.path().join(path))
+                .current_dir(self.temp_dir.path())
                 .arg("--config")
                 .arg(changelog_config.path())
-                .arg("--use-branch-tags");
+                .arg("--use-branch-tags")
+                .arg("--unreleased");
 
-            if let Some(tag_pattern) = &tag_pattern {
-                command.arg("--tag-pattern").arg(tag_pattern);
+            if let Some(tag) = &force_tag {
+                if !tag.contains("-dev") {
+                    command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
+                }
+
+                command.arg("--tag").arg(tag);
             }
 
-            match bump_type {
-                BumpType::Auto => command.arg("--bump"),
-                BumpType::Minor => command.arg("--bumpminor").arg("minor"),
-            };
+            command.arg("--bump");
         };
 
         let mut command = std::process::Command::new("git-cliff");
         configure_command(&mut command);
 
+        if !self.temp_dir.path().join("CHANGELOG.md").exists() {
+            command.arg("--output");
+        } else {
+            command.arg("--prepend").arg("CHANGELOG.md");
+        }
+
         let exit_status = command
-            .arg("--output")
             .stderr(std::process::Stdio::inherit())
             .stdout(std::process::Stdio::inherit())
             .spawn()

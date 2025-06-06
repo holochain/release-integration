@@ -70,10 +70,13 @@ topo_order = false
 # sort the commits inside sections by oldest/newest order
 sort_commits = "newest"
 
+# CUSTOM: Want to always use conventional commits.
+require_conventional = true
+
 [bump]
-# Want to use a `v` prefix, so set the intial tag and git-cliff will respect it after that
+# CUSTOM: Want to use a `v` prefix, so set the intial tag and git-cliff will respect it after that
 initial_tag = "v0.1.0"
 
-# For these, this is how we want to work with crates that have a `0.x.y` version.
+# CUSTOM: For these, this is how we want to work with crates that have a `0.x.y` version.
 features_always_bump_minor = false
 breaking_always_bump_major = false
