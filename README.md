@@ -26,6 +26,11 @@ nix develop -c ./scripts/run_setup.sh
 If this script succeeds, you should find a git token in `./scripts/git_test_token.txt` and a crates token in 
 `./scripts/crates_test_token.txt`.
 
+## Logging into the test services
+
+- Access Gitea at `http://localhost:3000` and log in with the username `gituser` and the password `pass`.
+- Access the crates registry at `http://localhost:8000` and log in with the username `admin` and the password `admin`.
+
 ## Running the tests
 
 Ensure the services are up and running, then run the tests with:
