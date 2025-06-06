@@ -455,6 +455,11 @@ fn pre_release_from_workspace() {
     harness.push_tag(&version);
 }
 
+/// A library crate with versions across multiple branches to check that the versioning continues
+/// to behave as expected.
+///
+/// With this test, we get:
+/// - That we can generate changelogs on release branches with correct versioning.
 #[test]
 fn version_across_release_branches() {
     let harness = TestHarness::new("changelog-release-branches");
