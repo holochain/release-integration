@@ -454,3 +454,207 @@ fn pre_release_from_workspace() {
     harness.push_branch("main");
     harness.push_tag(&version);
 }
+
+#[test]
+fn version_across_release_branches() {
+    let harness = TestHarness::new("changelog-release-branches");
+
+    //
+    // Initialize the repository
+    //
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("README.md", "# pre-release workspace");
+    harness.commit("README.md", "chore: Add README");
+    harness.push_branch("main");
+
+    //
+    // Add Rust source code
+    //
+    let lib_crate = CrateModel::new("test_lib", "0.1.0")
+        .make_lib()
+        .with_description("A test lib crate")
+        .with_repository(harness.repository_url().as_str())
+        .with_license("Apache-2.0");
+
+    harness.add_crate(lib_crate);
+    harness.verify_cargo_project("");
+    harness.commit("*", "chore: Add crate");
+    harness.push_branch("main");
+
+    //
+    // Generate the initial changelog
+    //
+    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    assert_eq!(version, "v0.1.0");
+
+    //
+    // Check the changelog content
+    //
+    let changelog = harness.read_file_content("CHANGELOG.md");
+    assert!(changelog.contains("## [0.1.0]"));
+    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("Add crate"));
+
+    //
+    // Push a tag for the version
+    //
+    harness.commit("*", "docs: Update changelog for v0.1.0");
+    harness.tag(version.as_str(), version.as_str());
+    harness.push_branch("main");
+    harness.push_tag(version.as_str());
+
+    //
+    // Make a code change to the library
+    //
+    harness.write_file_content(
+        "src/lib.rs",
+        r#"pub fn add(a: i32, b: i32) -> i32 { a + b }"#,
+    );
+    harness.verify_cargo_project("");
+    harness.commit("src/lib.rs", "chore: Add add function");
+    harness.push_branch("main");
+
+    //
+    // Generate the changelog for the new version
+    //
+    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    assert_eq!(version, "v0.1.1");
+
+    //
+    // Check the changelog content
+    //
+    let changelog = harness.read_file_content("CHANGELOG.md");
+    assert!(changelog.contains("## [0.1.0]"));
+    assert!(changelog.contains("## [0.1.1]"));
+    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("Add add function"));
+
+    //
+    // Push a tag for the new version
+    //
+    harness.commit("*", "docs: Update changelog for v0.1.1");
+    harness.tag(version.as_str(), version.as_str());
+    harness.push_branch("main");
+    harness.push_tag(version.as_str());
+
+    //
+    // Now create a release branch
+    //
+    harness.switch_branch("release/0.1.x");
+
+    //
+    // Switch back to main and make a change
+    //
+    harness.switch_branch("main");
+    harness.write_file_content(
+        "src/lib.rs",
+        "pub fn add(a: i32, b: i32) -> i32 { a + b }\npub fn subtract(a: i32, b: i32) -> i32 { a - b }",
+    );
+    harness.verify_cargo_project("");
+    harness.commit("src/lib.rs", "feat: Add subtract function");
+    harness.push_branch("main");
+
+    //
+    // Create a pre-release version
+    //
+    let version = harness.generate_changelog(
+        ChangelogConfig::Pre1Point0Cliff,
+        Some("v0.2.0-dev.0".to_string()),
+    );
+    assert_eq!(version, "v0.2.0-dev.0");
+
+    //
+    // Check the changelog content
+    //
+    let changelog = harness.read_file_content("CHANGELOG.md");
+    assert!(changelog.contains("## [0.1.0]"));
+    assert!(changelog.contains("## [0.1.1]"));
+    assert!(changelog.contains("## [0.2.0-dev.0]"));
+    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("Add subtract function"));
+
+    //
+    // Push a tag for the version
+    //
+    harness.commit("*", "docs: Update changelog for v0.2.0-dev.0");
+    harness.tag(&version, &version);
+    harness.push_branch("main");
+    harness.push_tag(&version);
+
+    //
+    // Make a change to the library crate
+    //
+    harness.write_file_content(
+        "src/lib.rs",
+        "/// It adds numbers\npub fn add(a: i32, b: i32) -> i32 { a + b }",
+    );
+    harness.verify_cargo_project("");
+    harness.commit("src/lib.rs", "docs: Add documentation to add function");
+    harness.push_branch("main");
+
+    //
+    // Release the pre-release version as a stable version
+    //
+    let version =
+        harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, Some("v0.2.0".to_string()));
+    assert_eq!(version, "v0.2.0");
+
+    //
+    // Check the changelog content
+    //
+    let changelog = harness.read_file_content("CHANGELOG.md");
+    assert!(changelog.contains("## [0.1.0]"));
+    assert!(changelog.contains("## [0.1.1]"));
+    assert!(changelog.contains("## [0.2.0-dev.0]"));
+    assert!(changelog.contains("## [0.2.0]"));
+    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("Add subtract function"));
+
+    //
+    // Push a tag for the version
+    //
+    harness.commit("*", "docs: Update changelog for v0.2.0");
+    harness.tag(&version, &version);
+    harness.push_branch("main");
+    harness.push_tag(&version);
+
+    //
+    // Now switch back to the release branch and make a change
+    //
+    harness.git_status();
+    harness.switch_branch("release/0.1.x");
+    harness.git_status();
+    harness.write_file_content(
+        "src/lib.rs",
+        "/// It adds numbers\npub fn add(a: i32, b: i32) -> i32 { a + b }",
+    );
+    harness.verify_cargo_project("");
+    harness.commit("src/lib.rs", "docs: Add documentation to add function");
+    harness.push_branch("release/0.1.x");
+
+    //
+    // Generate the changelog for the new version
+    //
+    harness.git_status();
+    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    assert_eq!(version, "v0.1.2");
+
+    //
+    // Check the changelog content
+    //
+    let changelog = harness.read_file_content("CHANGELOG.md");
+    assert!(changelog.contains("## [0.1.0]"));
+    assert!(changelog.contains("## [0.1.1]"));
+    assert!(changelog.contains("## [0.1.2]"));
+    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("Add documentation to add function"));
+
+    //
+    // Push a tag for the version
+    //
+    harness.commit("*", "docs: Update changelog for v0.1.2");
+    harness.tag(&version, &version);
+    harness.push_branch("release/0.1.x");
+    harness.push_tag(&version);
+}

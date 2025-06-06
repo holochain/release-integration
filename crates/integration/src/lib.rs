@@ -1,4 +1,6 @@
-use git2::{IndexAddOption, ObjectType, RemoteCallbacks, Repository, RepositoryInitOptions};
+use git2::{
+    BranchType, IndexAddOption, ObjectType, RemoteCallbacks, Repository, RepositoryInitOptions,
+};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -58,7 +60,9 @@ impl TestHarness {
             .set_str("user.email", "gituser@holochain.org")
             .unwrap();
         config.set_str("credential.helper", "").unwrap();
+        config.set_str("pager.branch", "false").unwrap();
         let mut index = repository.index().unwrap();
+        index.write().unwrap();
         let tree_id = index.write_tree().unwrap();
         let signature = repository.signature().unwrap();
         repository
@@ -103,6 +107,7 @@ impl TestHarness {
         index
             .add_all([pattern], IndexAddOption::DEFAULT, None)
             .unwrap();
+        index.write().unwrap();
         let tree = index.write_tree().unwrap();
         let tree = self.repository.find_tree(tree).unwrap();
 
@@ -164,6 +169,34 @@ impl TestHarness {
                 Some(&mut push_opts),
             )
             .expect("Failed to push tag to remote");
+    }
+
+    pub fn switch_branch(&self, branch: &str) {
+        let head = self.repository.head().unwrap().peel_to_commit().unwrap();
+        let target_branch = match self.repository.branch(branch, &head, false) {
+            Ok(branch) => branch,
+            Err(_) => {
+                self.repository
+                    .branches(Some(BranchType::Local))
+                    .unwrap()
+                    .find(|br| br.as_ref().unwrap().0.name().unwrap().unwrap() == branch)
+                    .expect("Branch not found")
+                    .unwrap()
+                    .0
+            }
+        };
+
+        let oid = target_branch.into_reference().target().unwrap();
+        let tree = self.repository.find_object(oid, None).unwrap();
+
+        self.repository
+            .checkout_tree(&tree, None)
+            .unwrap_or_else(|_| {
+                panic!("Failed to switch to branch '{}'", branch);
+            });
+        self.repository
+            .set_head(&format!("refs/heads/{branch}"))
+            .unwrap();
     }
 
     pub fn add_standard_gitignore(&self) {
@@ -325,6 +358,20 @@ edition.workspace = true
             "Cargo clippy failed for project at {}",
             path.display()
         );
+    }
+
+    pub fn git_status(&self) {
+        let output = std::process::Command::new("git")
+            .current_dir(self.temp_dir.path())
+            .arg("status")
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .expect("Failed to run git status")
+            .wait()
+            .unwrap();
+
+        assert!(output.success(), "git status failed");
     }
 
     pub fn generate_changelog(
