@@ -1,0 +1,8 @@
+.registry/index/
+.registry/crates/
+
+target/
+
+scripts/session.json
+scripts/crates_test_token.txt
+scripts/git_test_token.txt

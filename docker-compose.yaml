@@ -1,0 +1,27 @@
+services:
+  # Login with admin/admin at http://localhost:8000
+  kellnr:
+    image: ghcr.io/kellnr/kellnr:5.6
+    restart: always
+    ports:
+        - "8000:8000"
+    volumes:
+      - "kellnr:/opt/kdata ghcr.io/kellnr/kellnr:5"
+    stop_grace_period: 5s
+  # Log in with gituser/pass at http://localhost:3000
+  gitea:
+    image: docker.gitea.com/gitea:1
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    volumes:
+      - gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  kellnr:
+  gitea:
