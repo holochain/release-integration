@@ -208,6 +208,18 @@ impl TestHarness {
         );
     }
 
+    pub fn get_revision_for_tag(&self, tag: &str) -> String {
+        let id = self
+            .repository
+            .revparse_single(format!("refs/tags/{}", tag).as_str())
+            .expect("Failed to find tag")
+            .peel_to_commit()
+            .unwrap()
+            .id();
+
+        format!("{:?}", id)
+    }
+
     pub fn add_standard_gitignore(&self) {
         self.write_file_content(
             ".gitignore",
@@ -491,6 +503,101 @@ edition.workspace = true
             .unwrap()
             .wait()
             .unwrap();
+    }
+
+    pub fn get_current_version_from_workspace_cargo_toml(&self) -> String {
+        let content = self.read_file_content("Cargo.toml");
+        let cargo_toml = toml::from_str::<toml::Value>(&content).unwrap();
+
+        let get_version_from_table = |table: &toml::Value| {
+            table
+                .as_table()
+                .unwrap()
+                .get("package")
+                .unwrap()
+                .as_table()
+                .unwrap()
+                .get("version")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string()
+        };
+
+        match cargo_toml.as_table().unwrap().get("workspace") {
+            Some(workspace) => get_version_from_table(workspace),
+            None => get_version_from_table(&cargo_toml),
+        }
+    }
+
+    pub fn get_current_version_from_git_cliff(
+        &self,
+        changelog_config: ChangelogConfig,
+        force_tag: Option<String>,
+    ) -> String {
+        let configure_command = |command: &mut std::process::Command| {
+            command
+                .current_dir(self.temp_dir.path())
+                .arg("--config")
+                .arg(changelog_config.path())
+                .arg("--use-branch-tags")
+                .arg("--latest");
+
+            if let Some(tag) = &force_tag {
+                if !tag.contains("-dev") {
+                    command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
+                }
+            }
+        };
+
+        let mut command = std::process::Command::new("git-cliff");
+        configure_command(&mut command);
+
+        let output = command
+            .arg("--context")
+            .stderr(std::process::Stdio::inherit())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap()
+            .wait_with_output()
+            .unwrap();
+
+        println!(
+            "\n\nGit Cliff Output:\n{}",
+            String::from_utf8_lossy(&output.stdout)
+        );
+
+        let value = serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap();
+
+        value
+            .as_array()
+            .unwrap()
+            .first()
+            .unwrap()
+            .as_object()
+            .unwrap()
+            .get("version")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_string()
+    }
+
+    pub fn run_semver_checks(&self, against_revision: &str) -> bool {
+        let status = std::process::Command::new("cargo")
+            .current_dir(self.temp_dir.path())
+            .arg("semver-checks")
+            .arg("--workspace")
+            .arg("--baseline-rev")
+            .arg(against_revision)
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+
+        status.success()
     }
 
     /// Retain the temporary directory and print its path.
