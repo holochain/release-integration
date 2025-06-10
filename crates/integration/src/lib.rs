@@ -199,6 +199,15 @@ impl TestHarness {
             .unwrap();
     }
 
+    pub fn check_index_clean(&self) {
+        let diff = self.repository.diff_index_to_workdir(None, None).unwrap();
+        assert_eq!(
+            0,
+            diff.deltas().count(),
+            "Index is not clean, there are uncommitted changes"
+        );
+    }
+
     pub fn add_standard_gitignore(&self) {
         self.write_file_content(
             ".gitignore",
@@ -245,6 +254,13 @@ edition = "2024"
     }
 
     pub fn add_workspace(&self, workspace_model: CargoWorkspaceModel) {
+        let workspace_version = workspace_model
+            .crates
+            .first()
+            .as_ref()
+            .expect("No crates in workspace")
+            .version
+            .clone();
         self.write_file_content(
             "Cargo.toml",
             &format!(
@@ -259,6 +275,9 @@ version = "{}"
 edition = "2024"
 {}
 {}
+
+[workspace.dependencies]
+{}
 "#,
                 workspace_model
                     .crates
@@ -266,12 +285,7 @@ edition = "2024"
                     .map(|c| format!("\"crates/{}\"", c.name))
                     .collect::<Vec<_>>()
                     .join(",\n    "),
-                workspace_model
-                    .crates
-                    .first()
-                    .as_ref()
-                    .expect("No crates in workspace")
-                    .version,
+                workspace_version,
                 if let Some(repository) = workspace_model
                     .crates
                     .first()
@@ -296,6 +310,15 @@ edition = "2024"
                 } else {
                     String::new()
                 },
+                workspace_model
+                    .crates
+                    .iter()
+                    .map(|c| format!(
+                        "{} = {{ version = \"{}\", path = \"crates/{}\" }}",
+                        c.name, workspace_version, c.name
+                    ))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
             ),
         );
 
@@ -443,6 +466,31 @@ edition.workspace = true
             .as_str()
             .unwrap()
             .to_string()
+    }
+
+    pub fn set_version(&self, version: &str, push: bool) {
+        let mut command = std::process::Command::new("cargo");
+
+        command
+            .current_dir(self.temp_dir.path())
+            .arg("workspaces")
+            .arg("version");
+
+        if !push {
+            command.arg("--no-git-push");
+        }
+
+        command
+            .arg("--no-individual-tags")
+            .arg("--yes")
+            .arg("custom")
+            .arg(version.strip_prefix("v").unwrap_or(version))
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
     }
 
     /// Retain the temporary directory and print its path.
