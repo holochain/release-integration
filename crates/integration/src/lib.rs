@@ -281,7 +281,7 @@ edition = "2024"
 {}
 {}
 {}
-publish = ["dev-registry"]
+        publish = ["dev-registry"]
 "#,
                 crate_model.name,
                 self.random_id,
@@ -558,7 +558,7 @@ edition.workspace = true
             .wait()
             .unwrap();
     }
-    
+
     pub fn get_current_version_from_workspace_cargo_toml(&self) -> String {
         let content = self.read_file_content("Cargo.toml");
         let cargo_toml = toml::from_str::<toml::Value>(&content).unwrap();
@@ -669,7 +669,7 @@ edition.workspace = true
             .wait()
             .unwrap();
     }
-    
+
     /// Retain the temporary directory and print its path.
     ///
     /// Useful for debugging the state of the repository after tests. Alternatively, you can see
