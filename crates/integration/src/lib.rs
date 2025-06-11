@@ -1,6 +1,4 @@
-use git2::{
-    BranchType, IndexAddOption, ObjectType, RemoteCallbacks, Repository, RepositoryInitOptions,
-};
+use git2::{BranchType, IndexAddOption, RemoteCallbacks, Repository, RepositoryInitOptions};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -53,10 +51,14 @@ impl TestHarness {
     pub fn new(project_name: &str) -> Self {
         let temp_dir = tempfile::tempdir().unwrap();
 
-        let random_id = nanoid::nanoid!(5)
-            .to_ascii_lowercase()
-            .replace("_", "a")
-            .replace("~", "b");
+        let random_id = nanoid::nanoid!(
+            5,
+            &[
+                '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+                'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                'w', 'x', 'y', 'z',
+            ]
+        );
         let origin_url = format!("http://localhost:3000/gituser/{project_name}-{random_id}.git");
         println!(
             "Creating repository with origin: {}",
@@ -146,13 +148,7 @@ impl TestHarness {
     }
 
     pub fn tag(&self, tag: &str, message: &str) {
-        let signature = self.repository.signature().unwrap();
-        let head = self.repository.head().unwrap();
-        let commit = head.peel(ObjectType::Commit).unwrap();
-
-        self.repository
-            .tag(tag, &commit, &signature, message, false)
-            .expect("Failed to create tag");
+        release_util::utils::tag(&self.repository, tag, message).expect("Failed to create tag");
     }
 
     pub fn push_branch(&self, branch: &str) {
@@ -228,15 +224,8 @@ impl TestHarness {
     }
 
     pub fn get_revision_for_tag(&self, tag: &str) -> String {
-        let id = self
-            .repository
-            .revparse_single(format!("refs/tags/{}", tag).as_str())
-            .expect("Failed to find tag")
-            .peel_to_commit()
-            .unwrap()
-            .id();
-
-        id.to_string()
+        release_util::utils::get_revision_for_tag(&self.repository, tag)
+            .expect("Failed to get revision for tag")
     }
 
     pub fn add_standard_gitignore(&self) {
@@ -523,20 +512,8 @@ edition.workspace = true
             .wait_with_output()
             .unwrap();
 
-        let value = serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap();
-
-        value
-            .as_array()
-            .unwrap()
-            .first()
-            .unwrap()
-            .as_object()
-            .unwrap()
-            .get("version")
-            .unwrap()
-            .as_str()
-            .unwrap()
-            .to_string()
+        release_util::utils::get_version_from_cliff_output(&output.stdout)
+            .expect("Failed to get version from git-cliff output")
     }
 
     pub fn set_version(&self, version: &str, push: bool) {
@@ -553,6 +530,8 @@ edition.workspace = true
 
         command
             .arg("--no-individual-tags")
+            .arg("--message")
+            .arg("chore: Release %v")
             .arg("--yes")
             .arg("custom")
             .arg(version.trim_start_matches('v'))
@@ -566,27 +545,8 @@ edition.workspace = true
 
     pub fn get_current_version_from_workspace_cargo_toml(&self) -> String {
         let content = self.read_file_content("Cargo.toml");
-        let cargo_toml = toml::from_str::<toml::Value>(&content).unwrap();
-
-        let get_version_from_table = |table: &toml::Value| {
-            table
-                .as_table()
-                .unwrap()
-                .get("package")
-                .unwrap()
-                .as_table()
-                .unwrap()
-                .get("version")
-                .unwrap()
-                .as_str()
-                .unwrap()
-                .to_string()
-        };
-
-        match cargo_toml.as_table().unwrap().get("workspace") {
-            Some(workspace) => get_version_from_table(workspace),
-            None => get_version_from_table(&cargo_toml),
-        }
+        release_util::utils::get_current_version_from_cargo_toml(&content)
+            .expect("Failed to get current version from Cargo.toml")
     }
 
     pub fn get_current_version_from_git_cliff(
@@ -620,11 +580,6 @@ edition.workspace = true
             .unwrap()
             .wait_with_output()
             .unwrap();
-
-        println!(
-            "\n\nGit Cliff Output:\n{}",
-            String::from_utf8_lossy(&output.stdout)
-        );
 
         let value = serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap();
 

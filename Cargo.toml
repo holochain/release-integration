@@ -12,10 +12,16 @@ license = "Apache-2.0"
 [workspace.dependencies]
 # utility dependencies
 clap = "4.5"
+anyhow = "1.0"
+git2 = "0.20"
+serde_json = "1.0"
+url = "2.5"
+semver = "1.0"
+toml = "0.8"
+
+# self dependencies
+release_util = { version = "0.1.0", path = "crates/release_util" }
 
 # dependencies for integration tests
 tempfile = "3.20"
-git2 = "0.20"
 nanoid = "0.4"
-serde_json = "1.0"
-toml = "0.8"

@@ -181,7 +181,7 @@ fn check_semver_workspace() {
     //
     // Add Rust source code
     //
-    let lib_crate = CrateModel::new("test_lib_sem", "0.1.0")
+    let lib_crate = CrateModel::new("test_lib_sem", "0.0.1")
         .make_lib()
         .with_description("A test versioned lib crate")
         .with_repository(harness.repository_url().as_str())
@@ -205,7 +205,8 @@ fn check_semver_workspace() {
     //
     // Generate the initial changelog
     //
-    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let version =
+        harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
     assert_eq!(version, "v0.1.0");
     harness.commit("CHANGELOG.md", "chore: Update changelog for v0.1.0");
     harness.push_branch("main");
@@ -379,9 +380,7 @@ fn check_semver_workspace() {
         ChangelogConfig::Pre1Point0Cliff,
         Some("v0.2.0".to_string()),
     );
-    println!("Current version: {}", current_version);
     let revision = harness.get_revision_for_tag(&current_version);
-    println!("Revision: {}", revision);
 
     //
     // Switch to a release version

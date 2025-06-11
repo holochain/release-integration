@@ -2,7 +2,7 @@
   description = "Development environment";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
@@ -34,6 +34,7 @@
                 git-cliff
                 cargo-workspaces
                 cargo-semver-checks
+                gh
                 httpie
                 initool
                 perl

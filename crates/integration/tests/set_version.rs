@@ -141,7 +141,7 @@ fn set_versions_workspace() {
     //
     // Add Rust source code
     //
-    let lib_crate = CrateModel::new("test_lib_v", "0.1.0")
+    let lib_crate = CrateModel::new("test_lib_v", "0.0.1")
         .make_lib()
         .with_description("A test versioned lib crate")
         .with_repository(harness.repository_url().as_str())
@@ -165,7 +165,8 @@ fn set_versions_workspace() {
     //
     // Generate the initial changelog
     //
-    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let version =
+        harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
     assert_eq!(version, "v0.1.0");
     harness.commit("CHANGELOG.md", "chore: Update changelog for v0.1.0");
     harness.push_branch("main");
