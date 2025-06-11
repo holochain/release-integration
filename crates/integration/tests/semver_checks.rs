@@ -34,7 +34,8 @@ fn check_semver_simple_library() {
     //
     // Generate the initial changelog
     //
-    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
+    let version =
+        harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
     assert_eq!(version, "v0.1.0");
 
     //

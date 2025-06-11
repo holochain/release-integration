@@ -53,7 +53,10 @@ impl TestHarness {
     pub fn new(project_name: &str) -> Self {
         let temp_dir = tempfile::tempdir().unwrap();
 
-        let random_id = nanoid::nanoid!(5).to_ascii_lowercase().replace("_", "a");
+        let random_id = nanoid::nanoid!(5)
+            .to_ascii_lowercase()
+            .replace("_", "a")
+            .replace("~", "b");
         let origin_url = format!("http://localhost:3000/gituser/{project_name}-{random_id}.git");
         println!(
             "Creating repository with origin: {}",
@@ -74,6 +77,8 @@ impl TestHarness {
             .unwrap();
         config.set_str("credential.helper", "").unwrap();
         config.set_str("pager.branch", "false").unwrap();
+        config.set_str("commit.gpgSign", "false").unwrap();
+        config.set_str("tag.gpgSign", "false").unwrap();
         let mut index = repository.index().unwrap();
         index.write().unwrap();
         let tree_id = index.write_tree().unwrap();
