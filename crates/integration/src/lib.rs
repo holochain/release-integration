@@ -773,8 +773,13 @@ pub struct CargoWorkspaceModel {
 
 impl CargoWorkspaceModel {
     pub fn add_crate(mut self, crate_model: CrateModel, workspace_dependencies: &[&str]) -> Self {
-        self.crates
-            .push((crate_model, workspace_dependencies.iter().map(|t| t.to_string()).collect::<Vec<_>>()));
+        self.crates.push((
+            crate_model,
+            workspace_dependencies
+                .iter()
+                .map(|t| t.to_string())
+                .collect::<Vec<_>>(),
+        ));
         self
     }
 }
