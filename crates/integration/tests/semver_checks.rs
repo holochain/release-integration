@@ -193,8 +193,8 @@ fn check_semver_workspace() {
         .with_license("Apache-2.0");
 
     let workspace = CargoWorkspaceModel::default()
-        .add_crate(lib_crate)
-        .add_crate(bin_crate);
+        .add_crate(lib_crate, &[])
+        .add_crate(bin_crate, &[]);
 
     harness.add_workspace(workspace);
     harness.verify_cargo_project("crates/test_lib_sem");

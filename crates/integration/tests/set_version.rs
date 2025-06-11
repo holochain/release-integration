@@ -20,7 +20,7 @@ fn set_version_simple_library() {
     //
     // Add Rust source code
     //
-    let new_crate = CrateModel::new("testv", "0.1.0")
+    let new_crate = CrateModel::new("test_v", "0.1.0")
         .make_lib()
         .with_description("A test versioned crate")
         .with_repository(harness.repository_url().as_str())
@@ -152,8 +152,8 @@ fn set_versions_workspace() {
         .with_license("Apache-2.0");
 
     let workspace = CargoWorkspaceModel::default()
-        .add_crate(lib_crate)
-        .add_crate(bin_crate);
+        .add_crate(lib_crate, &[])
+        .add_crate(bin_crate, &[]);
 
     harness.add_workspace(workspace);
     harness.verify_cargo_project("crates/test_lib_v");

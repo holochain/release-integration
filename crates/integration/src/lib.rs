@@ -16,6 +16,18 @@ fn git_token() -> String {
         .clone()
 }
 
+fn crates_token() -> String {
+    static TOKEN: OnceLock<String> = OnceLock::new();
+    TOKEN
+        .get_or_init(|| {
+            std::fs::read_to_string("../../scripts/crates_test_token.txt")
+                .unwrap()
+                .trim()
+                .to_string()
+        })
+        .clone()
+}
+
 pub enum ChangelogConfig {
     Pre1Point0Cliff,
 }
@@ -32,6 +44,7 @@ impl ChangelogConfig {
 }
 
 pub struct TestHarness {
+    random_id: String,
     temp_dir: tempfile::TempDir,
     repository: Repository,
 }
@@ -40,8 +53,8 @@ impl TestHarness {
     pub fn new(project_name: &str) -> Self {
         let temp_dir = tempfile::tempdir().unwrap();
 
-        let random_ext = nanoid::nanoid!(5);
-        let origin_url = format!("http://localhost:3000/gituser/{project_name}-{random_ext}.git");
+        let random_id = nanoid::nanoid!(5).to_ascii_lowercase();
+        let origin_url = format!("http://localhost:3000/gituser/{project_name}-{random_id}.git");
         println!(
             "Creating repository with origin: {}",
             temp_dir.path().display()
@@ -77,6 +90,7 @@ impl TestHarness {
             .unwrap();
 
         Self {
+            random_id,
             temp_dir,
             repository,
         }
@@ -230,19 +244,47 @@ impl TestHarness {
         self.commit(".gitignore", "chore: add standard .gitignore");
     }
 
+    pub fn add_private_registry_cargo_toml(&self) {
+        let token = crates_token();
+
+        self.write_file_content(
+            "./.cargo/config.toml",
+            &format!(
+                r#"[registries.dev-registry]
+index = "sparse+http://localhost:8000/api/v1/crates/"
+credential-provider = ["cargo:token"]
+token = "{token}"
+
+[registry]
+default = "dev-registry"
+
+[source.crates-io]
+replace-with = "dev-registry-source"
+
+[source.dev-registry-source]
+registry = "sparse+http://localhost:8000/api/v1/crates/"
+        "#
+            ),
+        );
+
+        self.commit("./.cargo/config.toml", "chore: add private registry config");
+    }
+
     pub fn add_crate(&self, crate_model: CrateModel) {
         self.write_file_content(
             "Cargo.toml",
             &format!(
                 r#"[package]
-name = "{}"
+name = "{}_{}"
 version = "{}"
 edition = "2024"
 {}
 {}
 {}
-        "#,
+publish = ["dev-registry"]
+"#,
                 crate_model.name,
+                self.random_id,
                 crate_model.version,
                 if let Some(description) = &crate_model.description {
                     format!("description = \"{}\"", description)
@@ -271,6 +313,7 @@ edition = "2024"
             .first()
             .as_ref()
             .expect("No crates in workspace")
+            .0
             .version
             .clone();
         self.write_file_content(
@@ -294,7 +337,7 @@ edition = "2024"
                 workspace_model
                     .crates
                     .iter()
-                    .map(|c| format!("\"crates/{}\"", c.name))
+                    .map(|c| format!("\"crates/{}\"", c.0.name))
                     .collect::<Vec<_>>()
                     .join(",\n    "),
                 workspace_version,
@@ -303,6 +346,7 @@ edition = "2024"
                     .first()
                     .as_ref()
                     .expect("No crates in workspace")
+                    .0
                     .repository
                     .as_ref()
                 {
@@ -315,6 +359,7 @@ edition = "2024"
                     .first()
                     .as_ref()
                     .expect("No crates in workspace")
+                    .0
                     .license
                     .as_ref()
                 {
@@ -326,27 +371,31 @@ edition = "2024"
                     .crates
                     .iter()
                     .map(|c| format!(
-                        "{} = {{ version = \"{}\", path = \"crates/{}\" }}",
-                        c.name, workspace_version, c.name
+                        "{}_{} = {{ version = \"{}\", path = \"crates/{}\", registry = \"dev-registry\" }}",
+                        c.0.name, self.random_id, workspace_version, c.0.name
                     ))
                     .collect::<Vec<_>>()
                     .join("\n"),
             ),
         );
 
-        for crate_model in &workspace_model.crates {
+        for (crate_model, workspace_dependencies) in &workspace_model.crates {
             self.write_file_content(
                 &format!("crates/{}/Cargo.toml", crate_model.name),
                 &format!(
                     r#"[package]
-name = "{}"
+name = "{}_{}"
 {}
 version.workspace = true
 edition.workspace = true
 {}
 {}
+
+[dependencies]
+{}
         "#,
                     crate_model.name,
+                    self.random_id,
                     if let Some(description) = &crate_model.description {
                         format!("description = \"{}\"", description)
                     } else {
@@ -362,6 +411,11 @@ edition.workspace = true
                     } else {
                         String::new()
                     },
+                    workspace_dependencies
+                        .iter()
+                        .map(|dep| format!("{}_{}.workspace = true", dep, self.random_id))
+                        .collect::<Vec<_>>()
+                        .join("\n"),
                 ),
             );
 
@@ -504,7 +558,7 @@ edition.workspace = true
             .wait()
             .unwrap();
     }
-
+    
     pub fn get_current_version_from_workspace_cargo_toml(&self) -> String {
         let content = self.read_file_content("Cargo.toml");
         let cargo_toml = toml::from_str::<toml::Value>(&content).unwrap();
@@ -600,6 +654,22 @@ edition.workspace = true
         status.success()
     }
 
+    pub fn publish(&self) {
+        std::process::Command::new("cargo")
+            .current_dir(self.temp_dir.path())
+            .arg("workspaces")
+            .arg("publish")
+            .arg("--allow-branch")
+            .arg("main*")
+            .arg("--publish-as-is")
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+    }
+    
     /// Retain the temporary directory and print its path.
     ///
     /// Useful for debugging the state of the repository after tests. Alternatively, you can see
@@ -698,12 +768,13 @@ impl CrateModel {
 
 #[derive(Default)]
 pub struct CargoWorkspaceModel {
-    pub crates: Vec<CrateModel>,
+    crates: Vec<(CrateModel, Vec<String>)>,
 }
 
 impl CargoWorkspaceModel {
-    pub fn add_crate(mut self, crate_model: CrateModel) -> Self {
-        self.crates.push(crate_model);
+    pub fn add_crate(mut self, crate_model: CrateModel, workspace_dependencies: &[&str]) -> Self {
+        self.crates
+            .push((crate_model, workspace_dependencies.iter().map(|t| t.to_string()).collect::<Vec<_>>()));
         self
     }
 }
