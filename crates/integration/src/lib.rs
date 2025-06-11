@@ -53,7 +53,7 @@ impl TestHarness {
     pub fn new(project_name: &str) -> Self {
         let temp_dir = tempfile::tempdir().unwrap();
 
-        let random_id = nanoid::nanoid!(5).to_ascii_lowercase();
+        let random_id = nanoid::nanoid!(5).to_ascii_lowercase().replace("_", "a");
         let origin_url = format!("http://localhost:3000/gituser/{project_name}-{random_id}.git");
         println!(
             "Creating repository with origin: {}",

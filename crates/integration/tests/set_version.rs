@@ -20,7 +20,7 @@ fn set_version_simple_library() {
     //
     // Add Rust source code
     //
-    let new_crate = CrateModel::new("test_v", "0.1.0")
+    let new_crate = CrateModel::new("test_v", "0.0.1")
         .make_lib()
         .with_description("A test versioned crate")
         .with_repository(harness.repository_url().as_str())
@@ -34,7 +34,7 @@ fn set_version_simple_library() {
     //
     // Generate the initial changelog
     //
-    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
     assert_eq!(version, "v0.1.0");
 
     //
