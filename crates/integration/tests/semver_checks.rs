@@ -6,7 +6,6 @@ use integration::{CargoWorkspaceModel, ChangelogConfig, CrateModel, TestHarness}
 /// - Semver checks catch breaking API changes in a library.
 /// - Breaking API changes are permitted when the semver version is incremented appropriately.
 #[test]
-#[ignore]
 fn check_semver_simple_library() {
     let harness = TestHarness::new("check-semver-library");
 
@@ -21,7 +20,7 @@ fn check_semver_simple_library() {
     //
     // Add Rust source code
     //
-    let new_crate = CrateModel::new("test_sem", "0.1.0")
+    let new_crate = CrateModel::new("test_sem", "0.0.1")
         .make_lib()
         .with_description("A test semver crate")
         .with_repository(harness.repository_url().as_str())
@@ -35,7 +34,7 @@ fn check_semver_simple_library() {
     //
     // Generate the initial changelog
     //
-    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let version = harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
     assert_eq!(version, "v0.1.0");
 
     //

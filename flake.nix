@@ -36,6 +36,7 @@
                 cargo-semver-checks
                 httpie
                 initool
+                perl
               ];
             };
           };

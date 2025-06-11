@@ -231,7 +231,7 @@ impl TestHarness {
             .unwrap()
             .id();
 
-        format!("{:?}", id)
+        id.to_string()
     }
 
     pub fn add_standard_gitignore(&self) {
@@ -550,7 +550,7 @@ edition.workspace = true
             .arg("--no-individual-tags")
             .arg("--yes")
             .arg("custom")
-            .arg(version.strip_prefix("v").unwrap_or(version))
+            .arg(version.trim_start_matches('v'))
             .stdout(std::process::Stdio::inherit())
             .stderr(std::process::Stdio::inherit())
             .spawn()
