@@ -32,10 +32,11 @@
                 (rust-bin.fromRustupToolchainFile ./rust-toolchain.toml)
                 git
                 git-cliff
+                cargo-workspaces
                 cargo-semver-checks
                 httpie
-                gitea
                 initool
+                perl
               ];
             };
           };

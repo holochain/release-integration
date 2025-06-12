@@ -16,6 +16,18 @@ fn git_token() -> String {
         .clone()
 }
 
+fn crates_token() -> String {
+    static TOKEN: OnceLock<String> = OnceLock::new();
+    TOKEN
+        .get_or_init(|| {
+            std::fs::read_to_string("../../scripts/crates_test_token.txt")
+                .unwrap()
+                .trim()
+                .to_string()
+        })
+        .clone()
+}
+
 pub enum ChangelogConfig {
     Pre1Point0Cliff,
 }
@@ -32,6 +44,7 @@ impl ChangelogConfig {
 }
 
 pub struct TestHarness {
+    random_id: String,
     temp_dir: tempfile::TempDir,
     repository: Repository,
 }
@@ -40,8 +53,11 @@ impl TestHarness {
     pub fn new(project_name: &str) -> Self {
         let temp_dir = tempfile::tempdir().unwrap();
 
-        let random_ext = nanoid::nanoid!(5);
-        let origin_url = format!("http://localhost:3000/gituser/{project_name}-{random_ext}.git");
+        let random_id = nanoid::nanoid!(5)
+            .to_ascii_lowercase()
+            .replace("_", "a")
+            .replace("~", "b");
+        let origin_url = format!("http://localhost:3000/gituser/{project_name}-{random_id}.git");
         println!(
             "Creating repository with origin: {}",
             temp_dir.path().display()
@@ -61,6 +77,8 @@ impl TestHarness {
             .unwrap();
         config.set_str("credential.helper", "").unwrap();
         config.set_str("pager.branch", "false").unwrap();
+        config.set_str("commit.gpgSign", "false").unwrap();
+        config.set_str("tag.gpgSign", "false").unwrap();
         let mut index = repository.index().unwrap();
         index.write().unwrap();
         let tree_id = index.write_tree().unwrap();
@@ -77,6 +95,7 @@ impl TestHarness {
             .unwrap();
 
         Self {
+            random_id,
             temp_dir,
             repository,
         }
@@ -199,6 +218,27 @@ impl TestHarness {
             .unwrap();
     }
 
+    pub fn check_index_clean(&self) {
+        let diff = self.repository.diff_index_to_workdir(None, None).unwrap();
+        assert_eq!(
+            0,
+            diff.deltas().count(),
+            "Index is not clean, there are uncommitted changes"
+        );
+    }
+
+    pub fn get_revision_for_tag(&self, tag: &str) -> String {
+        let id = self
+            .repository
+            .revparse_single(format!("refs/tags/{}", tag).as_str())
+            .expect("Failed to find tag")
+            .peel_to_commit()
+            .unwrap()
+            .id();
+
+        id.to_string()
+    }
+
     pub fn add_standard_gitignore(&self) {
         self.write_file_content(
             ".gitignore",
@@ -209,19 +249,47 @@ impl TestHarness {
         self.commit(".gitignore", "chore: add standard .gitignore");
     }
 
+    pub fn add_private_registry_cargo_toml(&self) {
+        let token = crates_token();
+
+        self.write_file_content(
+            "./.cargo/config.toml",
+            &format!(
+                r#"[registries.dev-registry]
+index = "sparse+http://localhost:8000/api/v1/crates/"
+credential-provider = ["cargo:token"]
+token = "{token}"
+
+[registry]
+default = "dev-registry"
+
+[source.crates-io]
+replace-with = "dev-registry-source"
+
+[source.dev-registry-source]
+registry = "sparse+http://localhost:8000/api/v1/crates/"
+        "#
+            ),
+        );
+
+        self.commit("./.cargo/config.toml", "chore: add private registry config");
+    }
+
     pub fn add_crate(&self, crate_model: CrateModel) {
         self.write_file_content(
             "Cargo.toml",
             &format!(
                 r#"[package]
-name = "{}"
+name = "{}_{}"
 version = "{}"
 edition = "2024"
 {}
 {}
 {}
-        "#,
+        publish = ["dev-registry"]
+"#,
                 crate_model.name,
+                self.random_id,
                 crate_model.version,
                 if let Some(description) = &crate_model.description {
                     format!("description = \"{}\"", description)
@@ -245,6 +313,14 @@ edition = "2024"
     }
 
     pub fn add_workspace(&self, workspace_model: CargoWorkspaceModel) {
+        let workspace_version = workspace_model
+            .crates
+            .first()
+            .as_ref()
+            .expect("No crates in workspace")
+            .0
+            .version
+            .clone();
         self.write_file_content(
             "Cargo.toml",
             &format!(
@@ -259,24 +335,23 @@ version = "{}"
 edition = "2024"
 {}
 {}
+
+[workspace.dependencies]
+{}
 "#,
                 workspace_model
                     .crates
                     .iter()
-                    .map(|c| format!("\"crates/{}\"", c.name))
+                    .map(|c| format!("\"crates/{}\"", c.0.name))
                     .collect::<Vec<_>>()
                     .join(",\n    "),
-                workspace_model
-                    .crates
-                    .first()
-                    .as_ref()
-                    .expect("No crates in workspace")
-                    .version,
+                workspace_version,
                 if let Some(repository) = workspace_model
                     .crates
                     .first()
                     .as_ref()
                     .expect("No crates in workspace")
+                    .0
                     .repository
                     .as_ref()
                 {
@@ -289,6 +364,7 @@ edition = "2024"
                     .first()
                     .as_ref()
                     .expect("No crates in workspace")
+                    .0
                     .license
                     .as_ref()
                 {
@@ -296,22 +372,35 @@ edition = "2024"
                 } else {
                     String::new()
                 },
+                workspace_model
+                    .crates
+                    .iter()
+                    .map(|c| format!(
+                        "{}_{} = {{ version = \"{}\", path = \"crates/{}\", registry = \"dev-registry\" }}",
+                        c.0.name, self.random_id, workspace_version, c.0.name
+                    ))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
             ),
         );
 
-        for crate_model in &workspace_model.crates {
+        for (crate_model, workspace_dependencies) in &workspace_model.crates {
             self.write_file_content(
                 &format!("crates/{}/Cargo.toml", crate_model.name),
                 &format!(
                     r#"[package]
-name = "{}"
+name = "{}_{}"
 {}
 version.workspace = true
 edition.workspace = true
 {}
 {}
+
+[dependencies]
+{}
         "#,
                     crate_model.name,
+                    self.random_id,
                     if let Some(description) = &crate_model.description {
                         format!("description = \"{}\"", description)
                     } else {
@@ -327,6 +416,11 @@ edition.workspace = true
                     } else {
                         String::new()
                     },
+                    workspace_dependencies
+                        .iter()
+                        .map(|dep| format!("{}_{}.workspace = true", dep, self.random_id))
+                        .collect::<Vec<_>>()
+                        .join("\n"),
                 ),
             );
 
@@ -445,6 +539,142 @@ edition.workspace = true
             .to_string()
     }
 
+    pub fn set_version(&self, version: &str, push: bool) {
+        let mut command = std::process::Command::new("cargo");
+
+        command
+            .current_dir(self.temp_dir.path())
+            .arg("workspaces")
+            .arg("version");
+
+        if !push {
+            command.arg("--no-git-push");
+        }
+
+        command
+            .arg("--no-individual-tags")
+            .arg("--yes")
+            .arg("custom")
+            .arg(version.trim_start_matches('v'))
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+    }
+
+    pub fn get_current_version_from_workspace_cargo_toml(&self) -> String {
+        let content = self.read_file_content("Cargo.toml");
+        let cargo_toml = toml::from_str::<toml::Value>(&content).unwrap();
+
+        let get_version_from_table = |table: &toml::Value| {
+            table
+                .as_table()
+                .unwrap()
+                .get("package")
+                .unwrap()
+                .as_table()
+                .unwrap()
+                .get("version")
+                .unwrap()
+                .as_str()
+                .unwrap()
+                .to_string()
+        };
+
+        match cargo_toml.as_table().unwrap().get("workspace") {
+            Some(workspace) => get_version_from_table(workspace),
+            None => get_version_from_table(&cargo_toml),
+        }
+    }
+
+    pub fn get_current_version_from_git_cliff(
+        &self,
+        changelog_config: ChangelogConfig,
+        force_tag: Option<String>,
+    ) -> String {
+        let configure_command = |command: &mut std::process::Command| {
+            command
+                .current_dir(self.temp_dir.path())
+                .arg("--config")
+                .arg(changelog_config.path())
+                .arg("--use-branch-tags")
+                .arg("--latest");
+
+            if let Some(tag) = &force_tag {
+                if !tag.contains("-dev") {
+                    command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
+                }
+            }
+        };
+
+        let mut command = std::process::Command::new("git-cliff");
+        configure_command(&mut command);
+
+        let output = command
+            .arg("--context")
+            .stderr(std::process::Stdio::inherit())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap()
+            .wait_with_output()
+            .unwrap();
+
+        println!(
+            "\n\nGit Cliff Output:\n{}",
+            String::from_utf8_lossy(&output.stdout)
+        );
+
+        let value = serde_json::from_slice::<serde_json::Value>(&output.stdout).unwrap();
+
+        value
+            .as_array()
+            .unwrap()
+            .first()
+            .unwrap()
+            .as_object()
+            .unwrap()
+            .get("version")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_string()
+    }
+
+    pub fn run_semver_checks(&self, against_revision: &str) -> bool {
+        let status = std::process::Command::new("cargo")
+            .current_dir(self.temp_dir.path())
+            .arg("semver-checks")
+            .arg("--workspace")
+            .arg("--baseline-rev")
+            .arg(against_revision)
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+
+        status.success()
+    }
+
+    pub fn publish(&self) {
+        std::process::Command::new("cargo")
+            .current_dir(self.temp_dir.path())
+            .arg("workspaces")
+            .arg("publish")
+            .arg("--allow-branch")
+            .arg("main*")
+            .arg("--publish-as-is")
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap();
+    }
+
     /// Retain the temporary directory and print its path.
     ///
     /// Useful for debugging the state of the repository after tests. Alternatively, you can see
@@ -543,12 +773,18 @@ impl CrateModel {
 
 #[derive(Default)]
 pub struct CargoWorkspaceModel {
-    pub crates: Vec<CrateModel>,
+    crates: Vec<(CrateModel, Vec<String>)>,
 }
 
 impl CargoWorkspaceModel {
-    pub fn add_crate(mut self, crate_model: CrateModel) -> Self {
-        self.crates.push(crate_model);
+    pub fn add_crate(mut self, crate_model: CrateModel, workspace_dependencies: &[&str]) -> Self {
+        self.crates.push((
+            crate_model,
+            workspace_dependencies
+                .iter()
+                .map(|t| t.to_string())
+                .collect::<Vec<_>>(),
+        ));
         self
     }
 }

@@ -146,8 +146,8 @@ fn simple_workspace_changelog() {
         .with_license("Apache-2.0");
 
     let workspace = CargoWorkspaceModel::default()
-        .add_crate(lib_crate)
-        .add_crate(bin_crate);
+        .add_crate(lib_crate, &[])
+        .add_crate(bin_crate, &[]);
 
     harness.add_workspace(workspace);
     harness.verify_cargo_project("crates/test_lib");
@@ -269,8 +269,8 @@ fn pre_release_from_workspace() {
         .with_license("Apache-2.0");
 
     let workspace = CargoWorkspaceModel::default()
-        .add_crate(lib_crate)
-        .add_crate(bin_crate);
+        .add_crate(lib_crate, &[])
+        .add_crate(bin_crate, &[]);
 
     harness.add_workspace(workspace);
     harness.verify_cargo_project("crates/test_lib");
