@@ -4,11 +4,15 @@ version = "0.1.0"
 description = "Integration tests for the release_util crate"
 edition.workspace = true
 license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+categories.workspace = true
+publish = false
 
 [dependencies]
 git2 = { workspace = true, features = ["vendored-openssl", "vendored-libgit2"] }
 tempfile.workspace = true
 nanoid.workspace = true
 serde_json.workspace = true
-toml.workspace = true
-release_util.workspace = true
+holochain_release_util.workspace = true
