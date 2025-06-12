@@ -70,9 +70,6 @@ topo_order = false
 # sort the commits inside sections by oldest/newest order
 sort_commits = "newest"
 
-# CUSTOM: Want to always use conventional commits.
-require_conventional = true
-
 [bump]
 # CUSTOM: Want to use a `v` prefix, so set the intial tag and git-cliff will respect it after that
 initial_tag = "v0.1.0"
