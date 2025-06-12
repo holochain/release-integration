@@ -2,7 +2,7 @@ use crate::generate_release::{
     generate_changelog, get_next_version, get_released_version_tag, run_semver_checks, set_version,
 };
 use crate::publish_release::{is_releasable_change, publish};
-use crate::utils::{get_revision_for_tag, tag};
+use crate::utils::{get_current_version_from_cargo_toml, get_revision_for_tag, push_tag, tag};
 use anyhow::Context;
 use std::fs::read_to_string;
 use std::path::Path;
@@ -28,6 +28,13 @@ pub fn generate_release(
 
     let force_tag = input_version_to_version_tag(force_version)?;
 
+    // Generate the changelog and check what version it chose.
+    generate_changelog(&dir, &cliff_config, &force_tag)?;
+    let next_version_tag = get_next_version(&dir, &cliff_config, &force_tag)?;
+
+    // Set the version in the Cargo.toml files.
+    set_version(&dir, &next_version_tag)?;
+
     // Ensure the changes on the current branch pass semver checks.
     match get_released_version_tag(&dir, &cliff_config, &force_tag) {
         Ok(released_version_tag) => {
@@ -39,13 +46,6 @@ pub fn generate_release(
             eprintln!("No previous release found, skipping semver checks: {e:?}");
         }
     }
-
-    // Generate the changelog and check what version it chose.
-    generate_changelog(&dir, &cliff_config, &force_tag)?;
-    let next_version_tag = get_next_version(&dir, &cliff_config, &force_tag)?;
-
-    // Set the version in the Cargo.toml files.
-    set_version(&dir, &next_version_tag)?;
 
     Ok(())
 }
@@ -59,11 +59,12 @@ pub fn generate_release(
 /// - Finally, it publishes the crates.
 pub fn publish_release(
     dir: impl AsRef<Path>,
-    danger_skip_releasable_changes: bool,
+    git_token: String,
+    danger_skip_releasable_changes_check: bool,
 ) -> anyhow::Result<()> {
     let repository = git2::Repository::open(&dir).context("Failed to open git repository")?;
 
-    if !danger_skip_releasable_changes {
+    if !danger_skip_releasable_changes_check {
         let maybe_pr_number = is_releasable_change(&repository, &dir)?;
         let Some(pr_number) = maybe_pr_number else {
             println!("Not a releasable change, stopping.");
@@ -72,10 +73,17 @@ pub fn publish_release(
         println!("Found releasable change with PR number: {}", pr_number);
     }
 
-    let current_version =
+    let cargo_toml =
         read_to_string(dir.as_ref().join("Cargo.toml")).context("Failed to read Cargo.toml")?;
+    let current_version = get_current_version_from_cargo_toml(&cargo_toml)
+        .context("Failed to find version in Cargo.toml")?;
     let current_tag = format!("v{current_version}");
+
     tag(&repository, &current_tag, &current_tag).context("Failed to tag the release")?;
+    println!("Tagged current HEAD with: {}", current_tag);
+
+    push_tag(&repository, &git_token, &current_tag).context("Failed to push tag to remote")?;
+    println!("Pushed tag to remote: {}", current_tag);
 
     publish(dir).context("Failed to publish crates")?;
 

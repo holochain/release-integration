@@ -11,16 +11,21 @@ pub(crate) fn generate_changelog(
 
     let mut command = common_git_cliff_command(&dir, cliff_config, force_tag);
 
-    command.arg("--unreleased").arg("--bump");
+    command.arg("--unreleased");
 
-    if dir.as_ref().join("CHANGELOG.md").exists() {
+    if !dir.as_ref().join("CHANGELOG.md").exists() {
+        println!("Changelog does not exist, creating a new one.");
         command.arg("--output");
     } else {
+        println!("Changelog already exists, prepending new changes.");
         command.arg("--prepend").arg("CHANGELOG.md");
     }
 
     if let Some(tag) = force_tag {
+        println!("Forcing tag: {}", tag);
         command.arg("--tag").arg(tag);
+    } else {
+        command.arg("--bump");
     }
 
     let status = command.status().context("git-cliff failed to run")?;
@@ -64,14 +69,11 @@ pub(crate) fn set_version(dir: impl AsRef<Path>, version: &str) -> anyhow::Resul
 
     command
         .current_dir(dir)
-        .stdout(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::inherit())
         .stderr(std::process::Stdio::inherit())
         .arg("workspaces")
         .arg("version")
         .arg("--no-git-commit")
-        .arg("--no-git-tag")
-        .arg("--no-git-push")
-        .arg("--no-individual-tags")
         .arg("--yes")
         .arg("custom")
         .arg(version);

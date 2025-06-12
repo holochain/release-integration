@@ -1,3 +1,4 @@
+use anyhow::Context;
 use clap::{Parser, Subcommand};
 use release_util::{generate_release, publish_release};
 use std::path::PathBuf;
@@ -51,9 +52,12 @@ fn main() -> anyhow::Result<()> {
             generate_release(cli.dir, cliff_config, force_version)?;
         }
         ReleaseUtilCommand::Publish => {
-            publish_release(cli.dir, false)?;
+            let token = std::env::var("GH_TOKEN").context("Missing GH_TOKEN env var")?;
+            publish_release(cli.dir, token, false)?;
         }
     }
+
+    println!("Release-util completed successfully. Another successful release on the 📔📘!");
 
     Ok(())
 }

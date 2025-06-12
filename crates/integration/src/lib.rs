@@ -1,4 +1,6 @@
 use git2::{BranchType, IndexAddOption, RemoteCallbacks, Repository, RepositoryInitOptions};
+use release_util::utils::push_tag;
+use release_util::{generate_release, publish_release};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -170,20 +172,7 @@ impl TestHarness {
     }
 
     pub fn push_tag(&self, tag: &str) {
-        let mut remote = self
-            .repository
-            .find_remote("origin")
-            .expect("Failed to find remote 'origin'");
-
-        let mut push_opts = git2::PushOptions::new();
-        push_opts.remote_callbacks(Self::make_cb());
-
-        remote
-            .push(
-                &[format!("refs/tags/{tag}:refs/tags/{tag}")],
-                Some(&mut push_opts),
-            )
-            .expect("Failed to push tag to remote");
+        push_tag(&self.repository, &git_token(), tag).unwrap();
     }
 
     pub fn switch_branch(&self, branch: &str) {
@@ -628,6 +617,25 @@ edition.workspace = true
             .unwrap()
             .wait()
             .unwrap();
+    }
+
+    pub fn run_generate_release(
+        &self,
+        changelog_config: ChangelogConfig,
+        force_version: Option<String>,
+    ) {
+        let cliff_config = std::env::current_dir()
+            .unwrap()
+            .join(changelog_config.path())
+            .to_str()
+            .unwrap()
+            .to_string();
+
+        generate_release(self.temp_dir.path(), cliff_config, force_version).unwrap();
+    }
+
+    pub fn run_publish_release(&self) {
+        publish_release(self.temp_dir.path(), git_token(), true).unwrap();
     }
 
     /// Retain the temporary directory and print its path.

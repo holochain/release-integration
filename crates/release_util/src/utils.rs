@@ -3,7 +3,7 @@
 //! This module contains code that is common between this crate and the integration tests crate.
 
 use anyhow::Context;
-use git2::ObjectType;
+use git2::{ObjectType, RemoteCallbacks};
 
 /// Get the Git revision for a given tag in a repository.
 pub fn get_revision_for_tag(repository: &git2::Repository, tag: &str) -> anyhow::Result<String> {
@@ -54,6 +54,56 @@ pub fn tag(repository: &git2::Repository, tag: &str, message: &str) -> anyhow::R
     repository
         .tag(tag, &commit, &signature, message, force)
         .context("Failed to create tag")?;
+
+    Ok(())
+}
+
+/// Push a tag to the remote repository.
+///
+/// The user's email will be discovered from teh repository's configuration or the global Git
+/// configuration. The token used to push must be provided as an argument.
+pub fn push_tag(repository: &git2::Repository, token: &str, tag: &str) -> anyhow::Result<()> {
+    println!("Pushing tag '{}' to remote", tag);
+
+    let email_from_repo = |repository: &git2::Repository| -> anyhow::Result<String> {
+        let config = repository
+            .config()
+            .context("Failed to get repository config")?;
+        let email = config
+            .get_string("user.email")
+            .context("Failed to get user email")?;
+        Ok(email)
+    };
+    let email_from_global = || -> anyhow::Result<String> {
+        let config = git2::Config::open_default()?;
+        let email = config
+            .get_string("user.email")
+            .context("Failed to get global user email")?;
+        Ok(email)
+    };
+    let email = email_from_repo(repository)
+        .or_else(|_| email_from_global())
+        .context("Failed to get user email")?;
+
+    let mut remote = repository
+        .find_remote("origin")
+        .context("Failed to find remote 'origin'")?;
+
+    let mut push_opts = git2::PushOptions::new();
+
+    let mut cb = RemoteCallbacks::new();
+    cb.credentials(|_url, _username, _allowed_types| {
+        let created = git2::Cred::userpass_plaintext(&email, token)?;
+        Ok(created)
+    });
+    push_opts.remote_callbacks(cb);
+
+    remote
+        .push(
+            &[format!("refs/tags/{tag}:refs/tags/{tag}")],
+            Some(&mut push_opts),
+        )
+        .context("Failed to push tag to remote")?;
 
     Ok(())
 }
