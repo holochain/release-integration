@@ -40,3 +40,15 @@ nix develop -c cargo test
 ```
 
 Once the tests have finished, you can see the state that they have created in the running services.
+
+## Publishing the CLI
+
+This repository doesn't have its own release automation. Please follow the following steps:
+- Ensure the tests pass.
+- Update the version in `crates/release_util/Cargo.toml` to the next version.
+- Commit the changes and push them.
+- Run `git tag -a "v0.X.Y" -m "v0.X.Y"` with an appropriate version.
+- Push the tag with `git push origin v0.X.Y`.
+- The release CI workflow will create a GitHub release, and attach the CLI binary to it.
+- Now publish the CLI to crates.io with `cargo publish --package holochain_release_util`
+
