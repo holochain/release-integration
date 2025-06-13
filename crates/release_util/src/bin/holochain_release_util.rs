@@ -56,7 +56,7 @@ fn main() -> anyhow::Result<()> {
         }
         ReleaseUtilCommand::Publish => {
             let token = std::env::var("GH_TOKEN").context("Missing GH_TOKEN env var")?;
-            publish_release(cli.dir, token, false)?;
+            publish_release(cli.dir, token, false, false)?;
         }
     }
 

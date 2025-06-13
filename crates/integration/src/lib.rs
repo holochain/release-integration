@@ -636,7 +636,7 @@ edition.workspace = true
     }
 
     pub fn run_publish_release(&self) {
-        publish_release(self.temp_dir.path(), git_token(), true).unwrap();
+        publish_release(self.temp_dir.path(), git_token(), true, true).unwrap();
     }
 
     /// Retain the temporary directory and print its path.

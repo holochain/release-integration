@@ -1,7 +1,7 @@
 use crate::prepare_release::{
     generate_changelog, get_next_version, get_released_version_tag, run_semver_checks, set_version,
 };
-use crate::publish_release::{is_releasable_change, publish};
+use crate::publish_release::{create_gh_release, is_releasable_change, publish};
 use crate::utils::{get_current_version_from_cargo_toml, get_revision_for_tag, push_tag, tag};
 use anyhow::Context;
 use std::fs::read_to_string;
@@ -61,6 +61,7 @@ pub fn publish_release(
     dir: impl AsRef<Path>,
     git_token: String,
     danger_skip_releasable_changes_check: bool,
+    danger_skip_create_gh_release: bool,
 ) -> anyhow::Result<()> {
     let repository = git2::Repository::open(&dir).context("Failed to open git repository")?;
 
@@ -85,7 +86,11 @@ pub fn publish_release(
     push_tag(&repository, &git_token, &current_tag).context("Failed to push tag to remote")?;
     println!("Pushed tag to remote: {}", current_tag);
 
-    publish(dir).context("Failed to publish crates")?;
+    publish(&dir).context("Failed to publish crates")?;
+
+    if !danger_skip_create_gh_release {
+        create_gh_release(&dir, &current_tag).context("Failed to create GitHub release")?;
+    }
 
     Ok(())
 }

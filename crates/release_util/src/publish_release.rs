@@ -93,3 +93,28 @@ pub(crate) fn publish(dir: impl AsRef<Path>) -> anyhow::Result<()> {
 
     Ok(())
 }
+
+pub(crate) fn create_gh_release(dir: impl AsRef<Path>, tag: &str) -> anyhow::Result<()> {
+    let repository_name = std::env::var("GITHUB_REPOSITORY")
+        .context("Missing environment variable `GITHUB_REPOSITORY`")?
+        .split('/')
+        .next_back()
+        .context("GITHUB_REPOSITORY is not a valid GITHUB_REPOSITORY")?
+        .to_string();
+
+    let tag_version = tag.trim_start_matches('v');
+
+    std::process::Command::new("gh")
+        .current_dir(dir)
+        .arg("release")
+        .arg("create")
+        .arg("--generate-notes")
+        .arg("--title")
+        .arg(format!("{} {}", repository_name, tag_version))
+        .stdout(std::process::Stdio::inherit())
+        .stderr(std::process::Stdio::inherit())
+        .status()
+        .context("Failed to create GitHub release")?;
+
+    Ok(())
+}
