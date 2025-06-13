@@ -60,7 +60,5 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    println!("Release-util completed successfully. Another successful release on the 📔📘!");
-
     Ok(())
 }

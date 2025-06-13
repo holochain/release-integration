@@ -92,6 +92,8 @@ pub fn publish_release(
         create_gh_release(&dir, &current_tag).context("Failed to create GitHub release")?;
     }
 
+    println!("Release-util completed successfully. Another successful release on the 📔📘!");
+
     Ok(())
 }
 
