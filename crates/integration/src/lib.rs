@@ -150,7 +150,8 @@ impl TestHarness {
     }
 
     pub fn tag(&self, tag: &str, message: &str) {
-        holochain_release_util::utils::tag(&self.repository, tag, message).expect("Failed to create tag");
+        holochain_release_util::utils::tag(&self.repository, tag, message)
+            .expect("Failed to create tag");
     }
 
     pub fn push_branch(&self, branch: &str) {
