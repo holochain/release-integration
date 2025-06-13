@@ -121,6 +121,7 @@ pub(crate) fn create_gh_release(dir: impl AsRef<Path>, tag: &str) -> anyhow::Res
         .current_dir(dir)
         .arg("release")
         .arg("create")
+        .arg(tag)
         .arg("--generate-notes")
         .arg("--title")
         .arg(format!("{} {}", repository_name, tag_version))
