@@ -47,13 +47,26 @@ pub(crate) fn is_releasable_change(
             .as_u64()
             .expect("PR number should be a valid u64");
 
+        println!(
+            "Have labels for PR #{}: {:?}",
+            pr_number,
+            values.get("labels")
+        );
+
         let labels = values
             .get("labels")
             .context("Missing 'labels' in PR data")?
             .as_array()
             .context("Expected an array for labels")?
             .iter()
-            .map(|v| v.as_str().context("Expected a string as the label"))
+            .map(|v| {
+                v.as_object()
+                    .context("Expected label object")?
+                    .get("name")
+                    .context("Expected label to have a name")?
+                    .as_str()
+                    .context("Expected label name to be a string")
+            })
             .collect::<anyhow::Result<Vec<_>>>()?;
 
         if labels.contains(&RELEASE_LABEL) {
