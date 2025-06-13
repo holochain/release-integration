@@ -152,10 +152,10 @@ fn common_git_cliff_command(
         command.arg("--config").arg(cliff_config);
     }
 
-    if let Some(tag) = force_tag {
-        if !tag.contains("-dev") {
-            command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
-        }
+    if force_tag.as_ref().is_some_and(|tag| !tag.contains("-dev")) {
+        command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
+    } else {
+        command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+");
     }
 
     command
