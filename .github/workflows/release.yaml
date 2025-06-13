@@ -1,0 +1,43 @@
+name: release.yaml
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Match semantic versioning tags
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create a release build
+        run: cargo build --release --bin holochain_release_util
+
+      - name: Run UPX
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          version: latest
+          files: |
+            target/release/holochain_release_util
+          args: --best --lzma
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          tag: ${{ github.ref_name }}
+        run: |
+          gh release create "$tag" \
+              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+              --generate-notes
+      
+      - name: Upload release artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          tag: ${{ github.ref_name }}
+        run: |
+          cp target/release/holochain_release_util holochain_release_util-x86_64-unknown-linux-gnu
+          
+          gh release upload "$tag" \
+              holochain_release_util-x86_64-unknown-linux-gnu \
+              --clobber

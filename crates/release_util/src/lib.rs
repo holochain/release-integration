@@ -94,6 +94,7 @@ pub(crate) fn input_version_to_version_tag(
     force_version: Option<String>,
 ) -> anyhow::Result<Option<String>> {
     let force_tag = match force_version {
+        Some(input) if input.is_empty() => None,
         Some(maybe_version_tag) => match maybe_version_tag.strip_prefix("v") {
             Some(version) => {
                 if semver::Version::parse(version).is_ok() {

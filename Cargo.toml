@@ -8,6 +8,10 @@ resolver = "3"
 [workspace.package]
 edition = "2024"
 license = "Apache-2.0"
+authors = ["Holochain Core Dev Team <devcore@holochain.org>"]
+homepage = "https://www.holochain.org/"
+repository = "https://github.com/holochain/release-integration"
+categories = ["development-tools"]
 
 [workspace.dependencies]
 # utility dependencies
@@ -20,8 +24,15 @@ semver = "1.0"
 toml = "0.8"
 
 # self dependencies
-release_util = { version = "0.1.0", path = "crates/release_util" }
+holochain_release_util = { version = "0.1.0", path = "crates/release_util" }
 
 # dependencies for integration tests
 tempfile = "3.20"
 nanoid = "0.4"
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

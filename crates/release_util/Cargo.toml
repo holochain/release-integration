@@ -1,10 +1,15 @@
 [package]
-name = "release_util"
+name = "holochain_release_util"
 version = "0.1.0"
+description = "Utility crate for Holochain release management"
 edition.workspace = true
 license.workspace = true
-publish = false
-default-run = "release-util"
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+categories.workspace = true
+
+default-run = "holochain_release_util"
 
 [dependencies]
 clap = { workspace = true, features = ["derive"] }

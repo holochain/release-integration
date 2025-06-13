@@ -220,6 +220,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "holochain_release_util"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "git2",
+ "semver",
+ "serde_json",
+ "toml",
+ "url",
+]
+
+[[package]]
 name = "icu_collections"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -341,8 +354,8 @@ name = "integration"
 version = "0.1.0"
 dependencies = [
  "git2",
+ "holochain_release_util",
  "nanoid",
- "release_util",
  "serde_json",
  "tempfile",
  "toml",
@@ -574,19 +587,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "release_util"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "git2",
- "semver",
- "serde_json",
- "toml",
- "url",
-]
-
-[[package]]
 name = "rustix"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -678,9 +678,9 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "syn"
-version = "2.0.102"
+version = "2.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6397daf94fa90f058bd0fd88429dd9e5738999cca8d701813c80723add80462"
+checksum = "e4307e30089d6fd6aff212f2da3a1f9e32f3223b1f010fb09b7c95f90f3ca1e8"
 dependencies = [
  "proc-macro2",
  "quote",

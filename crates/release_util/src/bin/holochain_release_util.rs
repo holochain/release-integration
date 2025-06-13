@@ -1,6 +1,6 @@
 use anyhow::Context;
 use clap::{Parser, Subcommand};
-use release_util::{prepare_release, publish_release};
+use holochain_release_util::{prepare_release, publish_release};
 use std::path::PathBuf;
 
 #[derive(Parser)]

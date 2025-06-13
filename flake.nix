@@ -38,6 +38,7 @@
                 httpie
                 initool
                 perl
+                upx
               ];
             };
           };

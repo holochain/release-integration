@@ -1,6 +1,6 @@
 use git2::{BranchType, IndexAddOption, RemoteCallbacks, Repository, RepositoryInitOptions};
-use release_util::utils::push_tag;
-use release_util::{prepare_release, publish_release};
+use holochain_release_util::utils::push_tag;
+use holochain_release_util::{prepare_release, publish_release};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -150,7 +150,7 @@ impl TestHarness {
     }
 
     pub fn tag(&self, tag: &str, message: &str) {
-        release_util::utils::tag(&self.repository, tag, message).expect("Failed to create tag");
+        holochain_release_util::utils::tag(&self.repository, tag, message).expect("Failed to create tag");
     }
 
     pub fn push_branch(&self, branch: &str) {
@@ -213,7 +213,7 @@ impl TestHarness {
     }
 
     pub fn get_revision_for_tag(&self, tag: &str) -> String {
-        release_util::utils::get_revision_for_tag(&self.repository, tag)
+        holochain_release_util::utils::get_revision_for_tag(&self.repository, tag)
             .expect("Failed to get revision for tag")
     }
 
@@ -501,7 +501,7 @@ edition.workspace = true
             .wait_with_output()
             .unwrap();
 
-        release_util::utils::get_version_from_cliff_output(&output.stdout)
+        holochain_release_util::utils::get_version_from_cliff_output(&output.stdout)
             .expect("Failed to get version from git-cliff output")
     }
 
@@ -534,7 +534,7 @@ edition.workspace = true
 
     pub fn get_current_version_from_workspace_cargo_toml(&self) -> String {
         let content = self.read_file_content("Cargo.toml");
-        release_util::utils::get_current_version_from_cargo_toml(&content)
+        holochain_release_util::utils::get_current_version_from_cargo_toml(&content)
             .expect("Failed to get current version from Cargo.toml")
     }
 
