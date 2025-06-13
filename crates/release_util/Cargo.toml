@@ -7,4 +7,10 @@ publish = false
 default-run = "release-util"
 
 [dependencies]
-clap = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+anyhow.workspace = true
+git2 = { workspace = true, features = ["vendored-openssl", "vendored-libgit2"] }
+serde_json.workspace = true
+url.workspace = true
+semver.workspace = true
+toml.workspace = true
