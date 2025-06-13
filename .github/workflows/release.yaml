@@ -13,7 +13,15 @@ jobs:
       
       - name: Create a release build
         run: cargo build --release --bin holochain_release_util
-      
+
+      - name: Run UPX
+        uses: crazy-max/ghaction-upx@v3
+        with:
+          version: latest
+          files: |
+            target/release/holochain_release_util
+          args: --best --lzma
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

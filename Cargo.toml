@@ -29,3 +29,10 @@ holochain_release_util = { version = "0.1.0", path = "crates/release_util" }
 # dependencies for integration tests
 tempfile = "3.20"
 nanoid = "0.4"
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
