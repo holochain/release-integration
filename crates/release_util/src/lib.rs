@@ -1,4 +1,4 @@
-use crate::generate_release::{
+use crate::prepare_release::{
     generate_changelog, get_next_version, get_released_version_tag, run_semver_checks, set_version,
 };
 use crate::publish_release::{is_releasable_change, publish};
@@ -7,19 +7,19 @@ use anyhow::Context;
 use std::fs::read_to_string;
 use std::path::Path;
 
-mod generate_release;
+mod prepare_release;
 mod publish_release;
 pub mod utils;
 
 pub const RELEASE_LABEL: &str = "hra-release";
 
-/// Generates changes for the next release.
+/// Prepares changes for the next release.
 ///
 /// - Runs semver checks on the current branch to ensure it is releasable with
 ///   the requested configuration.
 /// - Generates a changelog using `git-cliff` based on the provided configuration.
 /// - Sets the version in the `Cargo.toml` files to the next version determined by `git-cliff`.
-pub fn generate_release(
+pub fn prepare_release(
     dir: impl AsRef<Path>,
     cliff_config: String,
     force_version: Option<String>,

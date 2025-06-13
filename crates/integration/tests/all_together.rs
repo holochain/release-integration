@@ -33,7 +33,7 @@ fn release_a_library() {
     //
     // Prepare an initial release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
 
     //
     // Trust that the tool did its job for now and commit + push the changes
@@ -72,7 +72,7 @@ fn release_a_library() {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, None);
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, None);
     harness.commit("*", "chore: Prepare next release");
     harness.push_branch("main");
 
@@ -107,7 +107,7 @@ fn release_a_library() {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(
+    harness.run_prepare_release(
         ChangelogConfig::Pre1Point0Cliff,
         Some("v0.2.0-dev.0".to_string()),
     );
@@ -139,7 +139,7 @@ fn release_a_library() {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, None);
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, None);
     harness.commit("*", "chore: Prepare next release");
     harness.push_branch("main");
 
@@ -181,7 +181,7 @@ pub fn subtract(a: i32, b: i32) -> i32 {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.2.0".to_string()));
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.2.0".to_string()));
     harness.commit("*", "chore: Prepare next release");
     harness.push_branch("main");
 
@@ -239,7 +239,7 @@ fn release_a_workspace() {
     //
     // Prepare an initial release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.1.0".to_string()));
 
     //
     // Trust that the tool did its job for now and commit + push the changes
@@ -284,7 +284,7 @@ fn release_a_workspace() {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, None);
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, None);
     harness.commit("*", "chore: Prepare next release");
     harness.push_branch("main");
 
@@ -319,7 +319,7 @@ fn release_a_workspace() {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(
+    harness.run_prepare_release(
         ChangelogConfig::Pre1Point0Cliff,
         Some("v0.2.0-dev.0".to_string()),
     );
@@ -354,7 +354,7 @@ fn release_a_workspace() {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, None);
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, None);
     harness.commit("*", "chore: Prepare next release");
     harness.push_branch("main");
 
@@ -396,7 +396,7 @@ pub fn subtract(a: i32, b: i32) -> i32 {
     //
     // Prepare a new release
     //
-    harness.run_generate_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.2.0".to_string()));
+    harness.run_prepare_release(ChangelogConfig::Pre1Point0Cliff, Some("v0.2.0".to_string()));
     harness.commit("*", "chore: Prepare next release");
     harness.push_branch("main");
 

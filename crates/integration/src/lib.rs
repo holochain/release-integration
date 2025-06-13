@@ -1,6 +1,6 @@
 use git2::{BranchType, IndexAddOption, RemoteCallbacks, Repository, RepositoryInitOptions};
 use release_util::utils::push_tag;
-use release_util::{generate_release, publish_release};
+use release_util::{prepare_release, publish_release};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -619,7 +619,7 @@ edition.workspace = true
             .unwrap();
     }
 
-    pub fn run_generate_release(
+    pub fn run_prepare_release(
         &self,
         changelog_config: ChangelogConfig,
         force_version: Option<String>,
@@ -631,7 +631,7 @@ edition.workspace = true
             .unwrap()
             .to_string();
 
-        generate_release(self.temp_dir.path(), cliff_config, force_version).unwrap();
+        prepare_release(self.temp_dir.path(), cliff_config, force_version).unwrap();
     }
 
     pub fn run_publish_release(&self) {

@@ -1,6 +1,6 @@
 use anyhow::Context;
 use clap::{Parser, Subcommand};
-use release_util::{generate_release, publish_release};
+use release_util::{prepare_release, publish_release};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -17,8 +17,11 @@ pub struct ReleaseUtilCli {
 
 #[derive(Subcommand)]
 pub enum ReleaseUtilCommand {
-    /// Generate changes for the next release.
-    Generate {
+    /// Prepare changes for the next release.
+    ///
+    /// Picks or accepts the next semver version, generates a changelog, and sets the version in the
+    /// Cargo project.
+    Prepare {
         /// The location of a `git-cliff` configuration file.
         ///
         /// This can either be a path to a file or a URL to a file.
@@ -45,11 +48,11 @@ fn main() -> anyhow::Result<()> {
     let cli = ReleaseUtilCli::parse();
 
     match cli.command {
-        ReleaseUtilCommand::Generate {
+        ReleaseUtilCommand::Prepare {
             cliff_config,
             force_version,
         } => {
-            generate_release(cli.dir, cliff_config, force_version)?;
+            prepare_release(cli.dir, cliff_config, force_version)?;
         }
         ReleaseUtilCommand::Publish => {
             let token = std::env::var("GH_TOKEN").context("Missing GH_TOKEN env var")?;

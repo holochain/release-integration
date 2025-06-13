@@ -1,6 +1,6 @@
 //! Common utilities for release management in a Git repository.
 //!
-//! This module contains code that is common between this crate and the integration tests crate.
+//! This module contains code that is common between this crate and the integration test crate.
 
 use anyhow::Context;
 use git2::{ObjectType, RemoteCallbacks};
@@ -60,7 +60,7 @@ pub fn tag(repository: &git2::Repository, tag: &str, message: &str) -> anyhow::R
 
 /// Push a tag to the remote repository.
 ///
-/// The user's email will be discovered from teh repository's configuration or the global Git
+/// The user's email will be discovered from the repository's configuration or the global Git
 /// configuration. The token used to push must be provided as an argument.
 pub fn push_tag(repository: &git2::Repository, token: &str, tag: &str) -> anyhow::Result<()> {
     println!("Pushing tag '{}' to remote", tag);
