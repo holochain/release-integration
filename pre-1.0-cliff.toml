@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 """
 # template for the changelog body
 # https://keats.github.io/tera/docs/#introduction
+# CUSTOM This has been customized for GitHub integration
 body = """
 {% if version -%}
     ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
@@ -19,10 +20,19 @@ body = """
     ## [Unreleased]
 {% endif -%}
 {% for group, commits in commits | group_by(attribute="group") %}
-    ### {{ group | upper_first }}
-    {% for commit in commits %}
+    ### {{ group | upper_first }}\n
+    {% for commit in commits -%}
         - {{ commit.message | split(pat="\n") | first | upper_first | trim }}\
-    {% endfor %}
+          {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
+          {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
+    {% endfor -%}
+{% endfor -%}
+{% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
+{%- if loop.first %}
+    ## First-time Contributors
+{% endif %}
+  * @{{ contributor.username }} made their first contribution\
+    {% if contributor.pr_number %} in [#{{ contributor.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ contributor.pr_number }}){% endif %}
 {% endfor %}\n
 """
 # template for the changelog footer
