@@ -37,6 +37,15 @@ pub enum ReleaseUtilCommand {
         /// argument without a value.
         #[arg(long)]
         force_version: Option<String>,
+
+        /// You are here because you created a crate with conflicting features.
+        ///
+        /// First, please read about the [feature system](https://doc.rust-lang.org/cargo/reference/features.html).
+        ///
+        /// Then pass this flag to have semver checks only run against the default feature set of
+        /// the crate, rather than all features.
+        #[arg(long)]
+        i_am_so_sorry_but_my_features_clash: bool,
     },
 
     /// Publish a release if one is found.
@@ -51,8 +60,14 @@ fn main() -> anyhow::Result<()> {
         ReleaseUtilCommand::Prepare {
             cliff_config,
             force_version,
+            i_am_so_sorry_but_my_features_clash,
         } => {
-            prepare_release(cli.dir, cliff_config, force_version)?;
+            prepare_release(
+                cli.dir,
+                cliff_config,
+                force_version,
+                i_am_so_sorry_but_my_features_clash,
+            )?;
         }
         ReleaseUtilCommand::Publish => {
             let token = std::env::var("GH_TOKEN").context("Missing GH_TOKEN env var")?;

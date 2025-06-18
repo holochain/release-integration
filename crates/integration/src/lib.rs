@@ -632,7 +632,7 @@ edition.workspace = true
             .unwrap()
             .to_string();
 
-        prepare_release(self.temp_dir.path(), cliff_config, force_version).unwrap();
+        prepare_release(self.temp_dir.path(), cliff_config, force_version, false).unwrap();
     }
 
     pub fn run_publish_release(&self) {
