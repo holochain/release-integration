@@ -114,15 +114,23 @@ pub(crate) fn get_released_version_tag(
 pub(crate) fn run_semver_checks(
     dir: impl AsRef<Path>,
     against_revision: &str,
+    i_am_so_sorry_but_my_features_clash: bool,
 ) -> anyhow::Result<()> {
-    let status = std::process::Command::new("cargo")
-        .current_dir(dir)
+    let mut command = std::process::Command::new("cargo");
+    command
+        .current_dir(&dir)
         .arg("semver-checks")
         .arg("--workspace")
         .arg("--baseline-rev")
         .arg(against_revision)
         .stdout(std::process::Stdio::inherit())
-        .stderr(std::process::Stdio::inherit())
+        .stderr(std::process::Stdio::inherit());
+
+    if i_am_so_sorry_but_my_features_clash {
+        command.arg("--default-features");
+    }
+
+    let status = command
         .status()
         .context("Failed to run cargo semver-checks")?;
 
