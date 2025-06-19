@@ -525,6 +525,8 @@ edition.workspace = true
             .arg("--yes")
             .arg("custom")
             .arg(version.trim_start_matches('v'))
+            .arg("--force")
+            .arg("*")
             .stdout(std::process::Stdio::inherit())
             .stderr(std::process::Stdio::inherit())
             .spawn()

@@ -76,7 +76,9 @@ pub(crate) fn set_version(dir: impl AsRef<Path>, version: &str) -> anyhow::Resul
         .arg("--no-git-commit")
         .arg("--yes")
         .arg("custom")
-        .arg(version);
+        .arg(version)
+        .arg("--force")
+        .arg("*");
 
     let status = command
         .status()
