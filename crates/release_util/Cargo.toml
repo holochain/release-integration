@@ -1,6 +1,6 @@
 [package]
 name = "holochain_release_util"
-version = "0.1.0"
+version = "0.1.1"
 description = "Utility crate for Holochain release management"
 edition.workspace = true
 license.workspace = true
