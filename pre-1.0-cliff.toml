@@ -79,6 +79,9 @@ filter_commits = false
 topo_order = false
 # sort the commits inside sections by oldest/newest order
 sort_commits = "newest"
+# CUSTOM: All tags for pre-releases and with build info will be grouped under the full release.
+# E.g. `v1.2.3-alpha.1`, `1.2.3-rc.1`, and `v1.2.3+build-2025-20-06` will all appear in the changelog under the `1.2.3` release.
+ignore_tags = "v?[0-9]+\\.[0-9]+\\.[0-9]+[-+].+"
 
 [bump]
 # CUSTOM: Want to use a `v` prefix, so set the intial tag and git-cliff will respect it after that
