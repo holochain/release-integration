@@ -78,7 +78,7 @@ on:
 
 jobs:
   call:
-    uses: holochain/actions/.github/workflows/prepare-release.yml@v1.0.0
+    uses: holochain/actions/.github/workflows/prepare-release.yml@v1.1.0
     with:
       cliff_config: "https://raw.githubusercontent.com/holochain/release-integration/refs/heads/main/pre-1.0-cliff.toml"
       force_version: ${{ inputs.force_version }}
@@ -102,7 +102,7 @@ on:
 
 jobs:
   call:
-    uses: holochain/actions/.github/workflows/publish-release.yml@v1.0.0
+    uses: holochain/actions/.github/workflows/publish-release.yml@v1.1.0
     secrets:
       HRA2_GITHUB_TOKEN: ${{ secrets.HRA2_GITHUB_TOKEN }}
       HRA2_CRATES_IO_TOKEN: ${{ secrets.HRA2_CRATES_IO_TOKEN }}
