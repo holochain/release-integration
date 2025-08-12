@@ -22,7 +22,9 @@ body = """
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
           {% if commit.body %}
-          {%- raw %}  {% endraw %}- {{ commit.body | replace(from="\n", to=" ") }}
+              {%- for line in commit.body | split(pat="\n\n") %}
+                  {%- raw %}  {% endraw %}- {{ line | replace(from="\n", to=" ") | upper_first }}
+              {% endfor -%}
           {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
           {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
@@ -35,7 +37,9 @@ body = """
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
           {% if commit.body %}
-          {%- raw %}  {% endraw %}- {{ commit.body | replace(from="\n", to=" ") }}
+              {%- for line in commit.body | split(pat="\n\n") %}
+                  {%- raw %}  {% endraw %}- {{ line | replace(from="\n", to=" ") | upper_first }}
+              {% endfor -%}
           {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
           {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
