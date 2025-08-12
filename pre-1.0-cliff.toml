@@ -77,6 +77,9 @@ conventional_commits = true
 filter_unconventional = false
 # Regex for parsing and grouping commits
 commit_parsers = [
+    { field = "author.name", pattern = "dependabot\\[bot\\]", group = "Automated Changes"},
+    { field = "author.name", pattern = "github-actions\\[bot\\]", group = "Automated Changes"},
+    { field = "author.name", pattern = "holochain-release-automation", group = "Automated Changes"},
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
     { message = "^docs", group = "Documentation"},
