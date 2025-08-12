@@ -29,7 +29,7 @@ body = """
 {% endfor -%}
 {% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
 {%- if loop.first %}
-    ## First-time Contributors
+    ### First-time Contributors
 {% endif %}
   * @{{ contributor.username }} made their first contribution\
     {% if contributor.pr_number %} in [#{{ contributor.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ contributor.pr_number }}){% endif %}
