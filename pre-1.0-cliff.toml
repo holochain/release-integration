@@ -21,6 +21,9 @@ body = """
         - {% if commit.breaking %}\\[**BREAKING**\\] {% endif %}*({{ commit.scope }})* {{ commit.message | upper_first }}\
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
+          {% if commit.body %}
+          {%- raw %}  {% endraw %}- {{ commit.body }}
+          {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
           {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
           {% endif -%}
@@ -31,6 +34,9 @@ body = """
         - {% if commit.breaking %}\\[**BREAKING**\\] {% endif %}{{ commit.message | upper_first }}\
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
+          {% if commit.body %}
+          {%- raw %}  {% endraw %}- {{ commit.body }}
+          {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
           {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
           {% endif -%}
