@@ -57,17 +57,17 @@ conventional_commits = true
 filter_unconventional = false
 # Regex for parsing and grouping commits
 commit_parsers = [
-    { message = "^[a|A]dd", group = "Added" },
-    { message = "^[s|S]upport", group = "Added" },
-    { message = "^[r|R]emove", group = "Removed" },
-    { message = "^.*: add", group = "Added" },
-    { message = "^.*: support", group = "Added" },
-    { message = "^.*: remove", group = "Removed" },
-    { message = "^.*: delete", group = "Removed" },
-    { message = "^test", group = "Fixed" },
-    { message = "^fix", group = "Fixed" },
-    { message = "^.*: fix", group = "Fixed" },
-    { message = "^.*", group = "Changed" },
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^docs", group = "Documentation"},
+    { message = "^refactor", group = "Refactor" },
+    { message = "^style", group = "Styling" },
+    { message = "^test", group = "Testing" },
+    { message = "^chore\\(release\\)", skip = true }, # Don't show version bumps etc. in changelog
+    { message = "^chore", group = "Miscellaneous Tasks" },
+    { message = "^ci", group = "CI" },
+    { message = "^build", group = "Build System" },
+    { message = "^perf", group = "Performance" },
 ]
 # Do not filter out the commits that are not matched by commit parsers
 filter_commits = false
