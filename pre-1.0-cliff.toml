@@ -86,15 +86,15 @@ commit_parsers = [
     { field = "author.name", pattern = "holochain-release-automation", group = "Automated Changes"},
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
-    { message = "^docs", group = "Documentation"},
-    { message = "^refactor", group = "Refactor" },
-    { message = "^style", group = "Styling" },
-    { message = "^test", group = "Testing" },
+    { message = "^perf", group = "Performance" },
     { message = "^chore\\(release\\)", skip = true }, # Don't show version bumps etc. in changelog
     { message = "^chore", group = "Miscellaneous Tasks" },
-    { message = "^ci", group = "CI" },
     { message = "^build", group = "Build System" },
-    { message = "^perf", group = "Performance" },
+    { message = "^ci", group = "CI" },
+    { message = "^test", group = "Testing" },
+    { message = "^refactor", group = "Refactor" },
+    { message = "^style", group = "Styling" },
+    { message = "^docs", group = "Documentation"},
 ]
 # Do not filter out the commits that are not matched by commit parsers
 filter_commits = false
