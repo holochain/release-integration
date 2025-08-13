@@ -23,7 +23,7 @@ body = """
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
           {% if commit.body %}
               {%- for line in commit.body | split(pat="\n\n") %}
-                  {%- raw %}  {% endraw %}- {{ line | replace(from="\n", to=" ") | upper_first }}
+                  {%- raw %}  {% endraw %}- {{ line | trim_start_matches(pat="*") | trim_start_matches(pat="-") | replace(from="\n", to=" ") | trim | upper_first }}
               {% endfor -%}
           {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
@@ -38,7 +38,7 @@ body = """
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
           {% if commit.body %}
               {%- for line in commit.body | split(pat="\n\n") %}
-                  {%- raw %}  {% endraw %}- {{ line | replace(from="\n", to=" ") | upper_first }}
+                  {%- raw %}  {% endraw %}- {{ line | trim_start_matches(pat="*") | trim_start_matches(pat="-") | replace(from="\n", to=" ") | trim | upper_first }}
               {% endfor -%}
           {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
