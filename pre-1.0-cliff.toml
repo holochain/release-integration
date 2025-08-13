@@ -51,13 +51,14 @@ body = """
 {%- if loop.first %}
     ### First-time Contributors
 {% endif %}
-  * @{{ contributor.username }} made their first contribution\
-    {% if contributor.pr_number %} in [#{{ contributor.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ contributor.pr_number }}){% endif %}
+  - @{{ contributor.username }} made their first contribution\
+    {% if contributor.pr_number %} in [#{{ contributor.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ contributor.pr_number }}){% endif -%}
 {% endfor %}\n
 """
 
 footer = """
 {% for release in releases -%}
+    {%- if loop.first %}\n{% endif -%}
     {% if release.version -%}
         {% if release.previous.version -%}
             [{{ release.version | trim_start_matches(pat="v") }}]: \
