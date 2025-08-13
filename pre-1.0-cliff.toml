@@ -16,7 +16,7 @@ body = """
     ## [Unreleased]
 {% endif -%}
 {% for group, commits in commits | group_by(attribute="group") %}
-    ### {{ group | upper_first }}\n
+    ### {{ group | striptags | upper_first }}\n
     {% for commit in commits | filter(attribute="scope") | sort(attribute="scope") -%}
         - {% if commit.breaking %}\\[**BREAKING**\\] {% endif %}*({{ commit.scope }})* {{ commit.message | upper_first }}\
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
@@ -81,20 +81,20 @@ conventional_commits = true
 filter_unconventional = false
 # Regex for parsing and grouping commits
 commit_parsers = [
-    { field = "author.name", pattern = "dependabot\\[bot\\]", group = "Automated Changes"},
-    { field = "author.name", pattern = "github-actions\\[bot\\]", group = "Automated Changes"},
-    { field = "author.name", pattern = "holochain-release-automation", group = "Automated Changes"},
-    { message = "^feat", group = "Features" },
-    { message = "^fix", group = "Bug Fixes" },
-    { message = "^perf", group = "Performance" },
+    { field = "author.name", pattern = "dependabot\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
+    { field = "author.name", pattern = "github-actions\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
+    { field = "author.name", pattern = "holochain-release-automation[0-9]*", group = "<!-- 10 -->Automated Changes"},
+    { message = "^feat", group = "<!-- 00 -->Features" },
+    { message = "^fix", group = "<!-- 01 -->Bug Fixes" },
+    { message = "^perf", group = "<!-- 02 -->Performance" },
     { message = "^chore\\(release\\)", skip = true }, # Don't show version bumps etc. in changelog
-    { message = "^chore", group = "Miscellaneous Tasks" },
-    { message = "^build", group = "Build System" },
-    { message = "^ci", group = "CI" },
-    { message = "^test", group = "Testing" },
-    { message = "^refactor", group = "Refactor" },
-    { message = "^style", group = "Styling" },
-    { message = "^docs", group = "Documentation"},
+    { message = "^chore", group = "<!-- 03 -->Miscellaneous Tasks" },
+    { message = "^build", group = "<!-- 04 -->Build System" },
+    { message = "^ci", group = "<!-- 05 -->CI" },
+    { message = "^test", group = "<!-- 06 -->Testing" },
+    { message = "^refactor", group = "<!-- 07 -->Refactor" },
+    { message = "^style", group = "<!-- 08 -->Styling" },
+    { message = "^docs", group = "<!-- 09 -->Documentation"},
 ]
 # Do not filter out the commits that are not matched by commit parsers
 filter_commits = false
