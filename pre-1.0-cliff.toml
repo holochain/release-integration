@@ -82,8 +82,8 @@ trim = true
 [git]
 # Parse commits based on https://www.conventionalcommits.org
 conventional_commits = true
-# Do not filter out the commits that are not conventional
-filter_unconventional = false
+# Filter out the commits that are not conventional
+filter_unconventional = true
 # Regex for parsing and grouping commits
 commit_parsers = [
     { field = "author.name", pattern = "dependabot\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
