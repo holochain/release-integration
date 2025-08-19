@@ -86,13 +86,13 @@ conventional_commits = true
 filter_unconventional = true
 # Regex for parsing and grouping commits
 commit_parsers = [
+    { message = "^chore: Prepare next release", skip = true }, # Don't show the automated commits that just prepare the release in the changelog
     { field = "author.name", pattern = "dependabot\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
     { field = "author.name", pattern = "github-actions\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
     { field = "author.name", pattern = "holochain-release-automation[0-9]*", group = "<!-- 10 -->Automated Changes"},
     { message = "^feat", group = "<!-- 00 -->Features" },
     { message = "^fix", group = "<!-- 01 -->Bug Fixes" },
     { message = "^perf", group = "<!-- 02 -->Performance" },
-    { message = "^chore\\(release\\)", skip = true }, # Don't show version bumps etc. in changelog
     { message = "^chore", group = "<!-- 03 -->Miscellaneous Tasks" },
     { message = "^build", group = "<!-- 04 -->Build System" },
     { message = "^ci", group = "<!-- 05 -->CI" },
