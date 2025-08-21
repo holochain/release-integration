@@ -12,7 +12,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 body = """
 {% if version -%}
     ## \\[[{{ version | trim_start_matches(pat="v") }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/{% if previous.version -%}compare/{{ previous.version }}...{% else -%}commits/{% endif -%}{{ version }})\\] - {{ timestamp | date(format="%Y-%m-%d") }}
-{% elseif previous.version -%}
+{% elif previous.version -%}
     ## \\[[Unreleased](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/compare/{{ previous.version }}...HEAD)\\]
 {% else -%}
     ## \\[Unreleased\\]
