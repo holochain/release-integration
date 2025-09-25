@@ -554,10 +554,10 @@ edition.workspace = true
                 .arg("--use-branch-tags")
                 .arg("--latest");
 
-            if let Some(tag) = &force_tag {
-                if !tag.contains("-dev") {
-                    command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
-                }
+            if let Some(tag) = &force_tag
+                && !tag.contains("-dev")
+            {
+                command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
             }
         };
 
