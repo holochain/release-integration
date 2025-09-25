@@ -185,7 +185,7 @@ If this script succeeds, you should find a git token in `./scripts/git_test_toke
 Ensure the services are up and running, then run the tests with:
 
 ```shell
-nix develop -c cargo test
+nix develop -c cargo test -- --test-threads 1 --nocapture
 ```
 
 Once the tests have finished, you can see the state that they have created in the running services.

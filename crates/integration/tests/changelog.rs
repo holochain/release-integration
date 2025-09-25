@@ -39,8 +39,8 @@ fn simple_library_changelog() {
 
     // Check the changelog content
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add crate"));
 
     //
@@ -66,9 +66,9 @@ fn simple_library_changelog() {
 
     // Check the changelog content
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("## [0.1.1]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("## \\[[0.1.1]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add add function"));
 
     //
@@ -99,10 +99,10 @@ fn subtract(a: i32, b: i32) -> i32 { a - b }
 
     // Check the changelog content
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("## [0.1.1]"));
-    assert!(changelog.contains("## [0.1.2]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("## \\[[0.1.1]"));
+    assert!(changelog.contains("## \\[[0.1.2]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add subtract function"));
 
     //
@@ -175,8 +175,8 @@ fn simple_workspace_changelog() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add workspace"));
     assert!(changelog.contains("Add add function to test_lib"));
 
@@ -222,9 +222,9 @@ pub fn subtract(a: i32, b: i32) -> i32 { a - b }
     // Check the changelog content for both crates
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("## [0.1.1]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("## \\[[0.1.1]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add subtract function to test_lib"));
 
     //
@@ -334,10 +334,10 @@ fn pre_release_from_workspace() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.6.0]"));
-    assert!(changelog.contains("## [0.6.1]"));
-    assert!(changelog.contains("## [0.7.0-dev.0]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.6.0]"));
+    assert!(changelog.contains("## \\[[0.6.1]"));
+    assert!(changelog.contains("## \\[[0.7.0-dev.0]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add workspace"));
     assert!(changelog.contains("Add add function to test_lib"));
 
@@ -369,11 +369,11 @@ fn pre_release_from_workspace() {
     // Check the changelog content for both crates
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.6.0]"));
-    assert!(changelog.contains("## [0.6.1]"));
-    assert!(changelog.contains("## [0.7.0-dev.0]"));
-    assert!(changelog.contains("## [0.7.0-dev.1]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.6.0]"));
+    assert!(changelog.contains("## \\[[0.6.1]"));
+    assert!(changelog.contains("## \\[[0.7.0-dev.0]"));
+    assert!(changelog.contains("## \\[[0.7.0-dev.1]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add add2 function to test_lib"));
 
     //
@@ -402,11 +402,11 @@ fn pre_release_from_workspace() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.6.0]"));
-    assert!(changelog.contains("## [0.6.1]"));
-    assert!(changelog.contains("## [0.7.0-dev.0]"));
-    assert!(changelog.contains("## [0.7.0-dev.1]"));
-    assert!(changelog.contains("## [0.7.0]"));
+    assert!(changelog.contains("## \\[[0.6.0]"));
+    assert!(changelog.contains("## \\[[0.6.1]"));
+    assert!(changelog.contains("## \\[[0.7.0-dev.0]"));
+    assert!(changelog.contains("## \\[[0.7.0-dev.1]"));
+    assert!(changelog.contains("## \\[[0.7.0]"));
     assert!(changelog.contains("Update main function in test_bin"));
     assert!(changelog.contains("Add add2 function to test_lib"));
 
@@ -438,12 +438,12 @@ fn pre_release_from_workspace() {
     // Check the changelog content the new version
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.6.0]"));
-    assert!(changelog.contains("## [0.6.1]"));
-    assert!(changelog.contains("## [0.7.0-dev.0]"));
-    assert!(changelog.contains("## [0.7.0-dev.1]"));
-    assert!(changelog.contains("## [0.7.0]"));
-    assert!(changelog.contains("## [0.7.1]"));
+    assert!(changelog.contains("## \\[[0.6.0]"));
+    assert!(changelog.contains("## \\[[0.6.1]"));
+    assert!(changelog.contains("## \\[[0.7.0-dev.0]"));
+    assert!(changelog.contains("## \\[[0.7.0-dev.1]"));
+    assert!(changelog.contains("## \\[[0.7.0]"));
+    assert!(changelog.contains("## \\[[0.7.1]"));
     assert!(changelog.contains("Add new feature to test_bin"));
 
     //
@@ -497,8 +497,11 @@ fn version_across_release_branches() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(
+        changelog.contains("## \\[[0.1.0]"),
+        "Changelog actual content is:\n{changelog}"
+    );
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add crate"));
 
     //
@@ -530,9 +533,9 @@ fn version_across_release_branches() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("## [0.1.1]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("## \\[[0.1.1]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add add function"));
 
     //
@@ -573,10 +576,10 @@ fn version_across_release_branches() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("## [0.1.1]"));
-    assert!(changelog.contains("## [0.2.0-dev.0]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("## \\[[0.1.1]"));
+    assert!(changelog.contains("## \\[[0.2.0-dev.0]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add subtract function"));
 
     //
@@ -609,11 +612,11 @@ fn version_across_release_branches() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("## [0.1.1]"));
-    assert!(changelog.contains("## [0.2.0-dev.0]"));
-    assert!(changelog.contains("## [0.2.0]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("## \\[[0.1.1]"));
+    assert!(changelog.contains("## \\[[0.2.0-dev.0]"));
+    assert!(changelog.contains("## \\[[0.2.0]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add subtract function"));
 
     //
@@ -646,10 +649,10 @@ fn version_across_release_branches() {
     // Check the changelog content
     //
     let changelog = harness.read_file_content("CHANGELOG.md");
-    assert!(changelog.contains("## [0.1.0]"));
-    assert!(changelog.contains("## [0.1.1]"));
-    assert!(changelog.contains("## [0.1.2]"));
-    assert!(changelog.contains("### Changed"));
+    assert!(changelog.contains("## \\[[0.1.0]"));
+    assert!(changelog.contains("## \\[[0.1.1]"));
+    assert!(changelog.contains("## \\[[0.1.2]"));
+    assert!(changelog.contains("### Miscellaneous Tasks"));
     assert!(changelog.contains("Add documentation to add function"));
 
     //
