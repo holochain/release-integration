@@ -4,6 +4,7 @@ use holochain_release_util::{prepare_release, publish_release};
 use std::path::PathBuf;
 
 #[derive(Parser)]
+#[command(version, about, long_about = None)]
 pub struct ReleaseUtilCli {
     /// The directory to run the command in.
     ///
