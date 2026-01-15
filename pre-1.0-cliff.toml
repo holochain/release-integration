@@ -52,7 +52,7 @@ trim = true
 # Parse commits based on https://www.conventionalcommits.org
 conventional_commits = true
 # Filter out the commits that are not conventional
-filter_unconventional = true
+filter_unconventional = false
 # Regex for parsing and grouping commits
 commit_parsers = [
     { message = "^chore: Prepare next release", skip = true }, # Don't show the automated commits that just prepare the release in the changelog
@@ -69,6 +69,7 @@ commit_parsers = [
     { message = "^refactor", group = "<!-- 07 -->Refactor" },
     { message = "^style", group = "<!-- 08 -->Styling" },
     { message = "^docs", group = "<!-- 09 -->Documentation"},
+    { message = ".*", group = "<!-- 11 -->Unconventional Commits"},
 ]
 # Do not filter out the commits that are not matched by commit parsers
 filter_commits = false
