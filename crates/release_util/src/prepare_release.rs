@@ -162,7 +162,7 @@ fn common_git_cliff_command(
         command.arg("--config").arg(cliff_config);
     }
 
-    if force_tag.as_ref().is_some_and(|tag| !tag.contains("-dev")) {
+    if force_tag.as_ref().is_some_and(|tag| !(tag.contains("-dev") || tag.contains("-rc"))) {
         command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+$");
     } else {
         command.arg("--tag-pattern").arg("^v\\d+.\\d+.\\d+");
