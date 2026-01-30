@@ -19,23 +19,8 @@ body = """
 {% endif -%}
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | upper_first }}\n
-    {% for commit in commits | filter(attribute="scope") | sort(attribute="scope") -%}
-        - {% if commit.breaking %}\\[**BREAKING**\\] {% endif %}*({{ commit.scope }})* {{ commit.message | upper_first }}\
-          {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
-          {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
-          {% if commit.body %}
-              {%- for line in commit.body | split(pat="\n\n") %}
-                  {%- raw %}  {% endraw %}- {{ line | trim_start_matches(pat="*") | trim_start_matches(pat="-") | replace(from="\n", to=" ") | trim | upper_first }}
-              {% endfor -%}
-          {% endif -%}
-          {% if commit.breaking and commit.breaking_description != commit.message %}
-          {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
-          {% endif -%}
-    {% endfor -%}
     {% for commit in commits -%}
-        {%- if commit.scope -%}
-        {% else -%}
-        - {% if commit.breaking %}\\[**BREAKING**\\] {% endif %}{{ commit.message | upper_first }}\
+        - {% if commit.breaking %}\\[**BREAKING**\\] {% endif %}{% if commit.scope %}*({{ commit.scope }})* {% endif %}{{ commit.message | upper_first }}\
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
           {% if commit.body %}
@@ -46,7 +31,6 @@ body = """
           {% if commit.breaking and commit.breaking_description != commit.message %}
           {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
           {% endif -%}
-        {% endif -%}
     {% endfor -%}
 {% endfor -%}
 {% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
