@@ -25,7 +25,7 @@ body = """
           {{ commit.message | split(pat="\n") | first | upper_first }}\
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
-          {% if commit.body %}
+          {% if commit.body and "dependabot" not in commit.author.name %}
               {%- for line in commit.body | split(pat="\n\n") %}
                   {%- raw %}  {% endraw %}- {{ line | trim_start_matches(pat="*") | trim_start_matches(pat="-") | replace(from="\n", to=" ") | trim | upper_first }}
               {% endfor -%}
