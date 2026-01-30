@@ -71,7 +71,7 @@ commit_parsers = [
     { message = "^refactor", group = "<!-- 07 -->Refactor" },
     { message = "^style", group = "<!-- 08 -->Styling" },
     { message = "^docs", group = "<!-- 09 -->Documentation"},
-    { message = ".*", group = "<!-- 11 -->Unconventional Commits"},
+    { message = ".*", group = "<!-- 11 -->Other Changes"},
 ]
 # Do not filter out the commits that are not matched by commit parsers
 filter_commits = false
