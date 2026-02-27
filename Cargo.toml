@@ -21,7 +21,7 @@ git2 = "0.20"
 serde_json = "1.0"
 url = "2.5"
 semver = "1.0"
-toml = "0.8"
+toml = "0.9"
 
 # self dependencies
 holochain_release_util = { version = "0.1.0", path = "crates/release_util" }
