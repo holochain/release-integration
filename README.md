@@ -75,6 +75,11 @@ on:
         description: "Specify the semver version for the next release, to override the default semver bump"
         default: ""
         required: false
+      skip_semver_checks:
+        type: boolean
+        description: "Skip the semver compatibility checks. Not recommended!"
+        default: false
+        required: false
 
 jobs:
   call:
@@ -82,6 +87,7 @@ jobs:
     with:
       cliff_config: "https://raw.githubusercontent.com/holochain/release-integration/refs/heads/main/pre-1.0-cliff.toml"
       force_version: ${{ inputs.force_version }}
+      skip_semver_checks: ${{ inputs.skip_semver_checks }}
     secrets:
       HRA2_GITHUB_TOKEN: ${{ secrets.HRA2_GITHUB_TOKEN }}
 ```
