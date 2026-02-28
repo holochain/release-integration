@@ -23,6 +23,7 @@ pub fn prepare_release(
     dir: impl AsRef<Path>,
     cliff_config: String,
     force_version: Option<String>,
+    skip_semver_checks: bool,
     i_am_so_sorry_but_my_features_clash: bool,
 ) -> anyhow::Result<()> {
     let repository = git2::Repository::open(&dir).context("Failed to open git repository")?;
@@ -37,14 +38,23 @@ pub fn prepare_release(
     set_version(&dir, &next_version_tag)?;
 
     // Ensure the changes on the current branch pass semver checks.
-    match get_released_version_tag(&dir, &cliff_config, &force_tag) {
-        Ok(released_version_tag) => {
-            println!("Retrieving revision for tag: {}", released_version_tag);
-            let revision = get_revision_for_tag(&repository, &released_version_tag)?;
-            run_semver_checks(&dir, &revision, i_am_so_sorry_but_my_features_clash)?;
+    if skip_semver_checks {
+        let msg = "Semver checks were skipped for this release. Ensure the version bump is intentional.";
+        if std::env::var("GITHUB_ACTIONS").as_deref() == Ok("true") {
+            println!("::warning title=Semver Checks Skipped::{msg}");
+        } else {
+            eprintln!("WARNING: {msg}");
         }
-        Err(e) => {
-            eprintln!("No previous release found, skipping semver checks: {e:?}");
+    } else {
+        match get_released_version_tag(&dir, &cliff_config, &force_tag) {
+            Ok(released_version_tag) => {
+                println!("Retrieving revision for tag: {}", released_version_tag);
+                let revision = get_revision_for_tag(&repository, &released_version_tag)?;
+                run_semver_checks(&dir, &revision, i_am_so_sorry_but_my_features_clash)?;
+            }
+            Err(e) => {
+                eprintln!("No previous release found, skipping semver checks: {e:?}");
+            }
         }
     }
 

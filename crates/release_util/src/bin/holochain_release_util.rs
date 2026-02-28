@@ -47,6 +47,16 @@ pub enum ReleaseUtilCommand {
         /// the crate, rather than all features.
         #[arg(long)]
         i_am_so_sorry_but_my_features_clash: bool,
+
+        /// Skip semver checks entirely.
+        ///
+        /// This should only be used when you are certain that the release does not break semver,
+        /// when semver checks are not applicable (e.g. a pre-release version bump), or when the
+        /// pre-release checks will not run on the baseline version.
+        ///
+        /// A warning will be emitted to indicate that checks were skipped.
+        #[arg(long)]
+        skip_semver_checks: bool,
     },
 
     /// Publish a release if one is found.
@@ -62,11 +72,13 @@ fn main() -> anyhow::Result<()> {
             cliff_config,
             force_version,
             i_am_so_sorry_but_my_features_clash,
+            skip_semver_checks,
         } => {
             prepare_release(
                 cli.dir,
                 cliff_config,
                 force_version,
+                skip_semver_checks,
                 i_am_so_sorry_but_my_features_clash,
             )?;
         }
