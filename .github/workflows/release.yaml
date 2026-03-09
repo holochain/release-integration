@@ -15,7 +15,7 @@ jobs:
         run: cargo build --release --bin holochain_release_util
 
       - name: Run UPX
-        uses: crazy-max/ghaction-upx@v3
+        uses: crazy-max/ghaction-upx@v4
         with:
           version: latest
           files: |
