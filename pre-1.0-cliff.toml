@@ -82,6 +82,8 @@ filter_commits = false
 topo_order = false
 # Show the newest commits in each section first
 sort_commits = "newest"
+# The Regex to use to select which tags count as release tags
+tag_pattern = "^v?[0-9]+\\.[0-9]+\\.[0-9]+"
 
 [bump]
 # Want to use a `v` prefix, so set the initial tag and git-cliff will respect it after that
