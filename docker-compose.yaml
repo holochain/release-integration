@@ -17,6 +17,7 @@ services:
     environment:
       - USER_UID=1000
       - USER_GID=1000
+      - GITEA__repository__ENABLE_PUSH_CREATE_USER=true
     volumes:
       - gitea:/data
       - /etc/timezone:/etc/timezone:ro

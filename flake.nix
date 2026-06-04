@@ -36,7 +36,6 @@
                 cargo-semver-checks
                 gh
                 httpie
-                initool
                 perl
                 upx
               ];
