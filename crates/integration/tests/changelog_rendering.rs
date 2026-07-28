@@ -55,6 +55,22 @@ A trailing paragraph after the list.",
     );
 
     //
+    // A list nested under another list. Depth is not carried through, so this records the
+    // one level of flattening rather than asserting a nesting we do not produce.
+    //
+    harness.write_file_content("g.txt", "g");
+    harness.commit(
+        "*",
+        "feat: add a nested list
+
+Lead in:
+
+- parent item
+  - child item
+- second parent",
+    );
+
+    //
     // A body carrying the artifacts of a conflicted rebase, plus a line that merely opens with
     // an issue reference and must be kept.
     //
@@ -77,6 +93,9 @@ Real body text.
     //
     harness.write_file_content("d.txt", "d");
     harness.commit("*", "# This is a combination of 2 commits.");
+    // Not an artifact: the `#` opens an issue reference rather than a comment git wrote.
+    harness.write_file_content("h.txt", "h");
+    harness.commit("*", "#123: fix the startup path");
     harness.write_file_content("e.txt", "e");
     harness.commit("*", "--fixup=31047affea8826bb03b4c4e2161da6c26241661d");
     harness.write_file_content("f.txt", "f");
@@ -100,6 +119,32 @@ Real body text.
   - A trailing paragraph after the list."
         ),
         "Lead-in list was not rendered as a nested list. Changelog is:\n{changelog}"
+    );
+
+    //
+    // Depth beyond the first level is not preserved, so a child item comes out as a sibling of
+    // its parent. This is asserted so the limitation is visible and cannot change unnoticed.
+    // The content itself must survive either way.
+    //
+    assert!(
+        changelog.contains(
+            "  - Lead in:
+    - parent item
+    - child item
+    - second parent"
+        ),
+        "Nested list rendering changed. Changelog is:\n{changelog}"
+    );
+
+    //
+    // A subject is only an artifact when the `#` is a comment git wrote, so an issue reference
+    // must survive as a subject, not just inside a body. It is rendered without the `#123:`
+    // because git-cliff reads that as the conventional commit type and the template prints only
+    // the description, which is how every other type is handled too.
+    //
+    assert!(
+        changelog.contains("- Fix the startup path"),
+        "A subject opening with an issue reference was skipped. Changelog is:\n{changelog}"
     );
 
     //
@@ -157,8 +202,8 @@ Real body text.
         !changelog.contains("fixup!"),
         "A fixup commit was published. Changelog is:\n{changelog}"
     );
-    assert!(
-        !changelog.contains("Other Changes"),
-        "Artifacts were grouped as Other Changes. Changelog is:\n{changelog}"
-    );
+
+    // The Other Changes group itself is not checked for absence. It legitimately holds the
+    // issue-reference subject above, which is an unconventional commit rather than an artifact.
+    // The assertions above already establish that no artifact reaches the changelog at all.
 }
