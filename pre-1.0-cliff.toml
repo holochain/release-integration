@@ -99,6 +99,13 @@ commit_preprocessors = [
     # Remove the indentation from hard-wrapped continuation lines, so that joining
     # them back together does not leave a run of spaces mid-sentence. This runs
     # after list items have been marked, so it only ever sees continuation lines.
+    #
+    # A consequence is that list depth is not carried through, so a list nested
+    # under another list is rendered one level deep rather than two. Numbered list
+    # items are not marked at all, so one following a bulleted item is joined onto
+    # it. Both are left as they are because neither shape appears in any commit
+    # across the repositories using this configuration, and encoding depth in the
+    # marker costs more template complexity than the cases justify.
     { pattern = '\n[ \t]+', replace = "\n" },
 ]
 # Regex for parsing and grouping commits
@@ -106,7 +113,11 @@ commit_parsers = [
     { message = "^chore: Prepare next release", skip = true }, # Don't show the automated commits that just prepare the release in the changelog
     # Rebase and squash artifacts that ended up as commit subjects. These describe
     # no change at all, so they are dropped rather than grouped as Other Changes.
-    { message = '^#', skip = true },
+    #
+    # The `#` must be followed by a space or tab, which is the same shape the
+    # preprocessor above treats as a git comment. A subject is only an artifact
+    # when it is a comment git wrote, so `#123: fix startup` is left alone.
+    { message = '^#[ \t]', skip = true },
     { message = '^(fixup|squash)!', skip = true },
     { message = '^--fixup=', skip = true },
     { field = "author.name", pattern = "dependabot\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
