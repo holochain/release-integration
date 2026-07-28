@@ -39,7 +39,8 @@ pub fn prepare_release(
 
     // Ensure the changes on the current branch pass semver checks.
     if skip_semver_checks {
-        let msg = "Semver checks were skipped for this release. Ensure the version bump is intentional.";
+        let msg =
+            "Semver checks were skipped for this release. Ensure the version bump is intentional.";
         if std::env::var("GITHUB_ACTIONS").as_deref() == Ok("true") {
             println!("::warning title=Semver Checks Skipped::{msg}");
         } else {
