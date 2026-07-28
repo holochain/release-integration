@@ -27,23 +27,36 @@ body = """
           {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
           {% if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ commit.remote.pr_number }}){% endif %}
           {% if commit.body and "dependabot" not in commit.author.name %}
-              {%- for line in commit.body | split(pat="\n\n") %}
-                  {%- raw %}  {% endraw %}- {{ line | trim_start_matches(pat="*") | trim_start_matches(pat="-") | replace(from="\n", to=" ") | trim | upper_first }}
-              {% endfor -%}
+              {%- set chunks = commit.body | split(pat="@@ CLIFF LIST ITEM @@") %}
+              {%- set has_lead_in = chunks | first | trim != "" %}
+              {%- for chunk in chunks %}
+                  {%- set is_list_item = not loop.first %}
+                  {%- for paragraph in chunk | split(pat="\n\n") %}
+                      {%- set text = paragraph | replace(from="\n", to=" ") | trim %}
+                      {%- if text %}{% if is_list_item and loop.first and has_lead_in %}{% raw %}    {% endraw %}- {{ text }}{% elif is_list_item and loop.first %}{% raw %}  {% endraw %}- {{ text }}{% else %}{% raw %}  {% endraw %}- {{ text | upper_first }}{% endif %}
+{% endif -%}
+                  {%- endfor -%}
+              {%- endfor -%}
           {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
           {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
           {% endif -%}
     {% endfor -%}
 {% endfor -%}
-{% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
-{%- if loop.first %}
+{%- set first_time_contributors = github.contributors | filter(attribute="is_first_time", value=true) %}
+{%- set_global has_named_contributor = false %}
+{%- for contributor in first_time_contributors %}
+    {%- if contributor.username %}{% set_global has_named_contributor = true %}{% endif %}
+{%- endfor %}
+{%- if has_named_contributor %}
     ### First-time Contributors
-{% endif %}
+{% for contributor in first_time_contributors %}
+{%- if contributor.username %}
   - @{{ contributor.username }} made their first contribution\
     {% if contributor.pr_number %} in [#{{ contributor.pr_number }}](https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}/pull/{{ contributor.pr_number }}){% endif -%}
-{%- if loop.last %}\n{% endif -%}
+{%- endif -%}
 {% endfor %}
+{% endif -%}
 """
 
 footer = """
@@ -58,9 +71,44 @@ trim = true
 conventional_commits = true
 # Filter out the commits that are not conventional
 filter_unconventional = false
+# Normalise commit messages before they are parsed and rendered.
+#
+# These run in order and each one is a single pass, so they are written to be
+# safe to apply to any message, not just the ones that need them.
+commit_preprocessors = [
+    # Drop git comment lines, such as the "# Conflicts:" block that git leaves
+    # behind when a commit is created while resolving a conflicted rebase. These
+    # are repository mechanics rather than release notes. Anchored on a preceding
+    # newline so that a commit subject can never be removed by this rule, and the
+    # `#` must be followed by a space or tab so that a line which opens with an
+    # issue reference such as `#123` is left alone.
+    { pattern = '\n#[ \t][^\n]*', replace = "" },
+    # Mark list items in the commit body so the template can render them as a
+    # nested list. Without this the template has no way to tell a list item from
+    # a hard-wrapped continuation line, and flattens the whole paragraph onto one
+    # line. The preceding newlines are captured and put back so that the blank
+    # line separating the subject from the body is preserved.
+    #
+    # The spaces inside the marker are load-bearing. A conventional commit footer
+    # is `token: value`, and a marker without spaces would turn a list item such
+    # as `- bootstrap_srv: drop ...` into something that parses as a footer token,
+    # which silently truncates the body at that point. The spaces mean the marker
+    # can never be read as a token, so the whole body survives parsing. It must
+    # also not start with whitespace, or the dedent rule below would eat it.
+    { pattern = '(\n+)[ \t]*[-*][ \t]+', replace = "${1}@@ CLIFF LIST ITEM @@" },
+    # Remove the indentation from hard-wrapped continuation lines, so that joining
+    # them back together does not leave a run of spaces mid-sentence. This runs
+    # after list items have been marked, so it only ever sees continuation lines.
+    { pattern = '\n[ \t]+', replace = "\n" },
+]
 # Regex for parsing and grouping commits
 commit_parsers = [
     { message = "^chore: Prepare next release", skip = true }, # Don't show the automated commits that just prepare the release in the changelog
+    # Rebase and squash artifacts that ended up as commit subjects. These describe
+    # no change at all, so they are dropped rather than grouped as Other Changes.
+    { message = '^#', skip = true },
+    { message = '^(fixup|squash)!', skip = true },
+    { message = '^--fixup=', skip = true },
     { field = "author.name", pattern = "dependabot\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
     { field = "author.name", pattern = "github-actions\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
     { field = "author.name", pattern = "holochain-release-automation[0-9]*", group = "<!-- 10 -->Automated Changes"},
