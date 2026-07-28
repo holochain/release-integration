@@ -21,6 +21,11 @@ jobs:
       - run: |
           nix develop --command cargo clippy --all-targets -- --deny warnings
 
+      # Only the changelog rendering tests can run here. The rest of the suite needs a Git server
+      # and a crate registry to be running, which this workflow does not provide.
+      - run: |
+          nix develop --command cargo test -p integration --test changelog_rendering
+
   ci_pass:
     if: ${{ always() }}
     runs-on: "ubuntu-latest"
