@@ -47,6 +47,11 @@ There are a few important things to know when maintaining repositories that use 
 - Release tags are filtered by branch so that only tags that are relevant to the current branch are considered. This is 
   done to permit creating new releases from release branches, after newer versions have been published from the main 
   branch.
+- A pre-release version, such as `v0.5.0-dev.0`, is created as a pre-release on GitHub and is never marked as the latest 
+  release.
+- Any other version is only marked as the latest release on GitHub if it is higher than the version of the current 
+  latest release. This means that releasing `v0.3.7` from a release branch will not replace `v0.4.2` as the latest 
+  release. Note that GitHub would otherwise mark every new release as the latest one, regardless of its version.
 - Although the tool used to manage versions in `Cargo.toml` files (cargo-workspaces) is capable of understanding various
   strategies for versioning crates within a workspace, this tool only supports using a single version for all crates and
   it must be specified in the root `Cargo.toml` file. Use the `[workspace.package]` section to specify the version and 
