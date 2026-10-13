@@ -4,7 +4,7 @@ Integration of third-party release tools with Holochain repositories
 
 ## Overview
 
-This repository provides a CLI tool for integrating third-party release tools for use in Holochain repositories. It 
+This repository provides a CLI tool for integrating third-party release tools for use in Holochain repositories. It
 operates in two stages, to first prepare a release and then to publish it. This allows the release preparation to be
 reviewed, possibly updated, and then approved before publishing proceeds.
 
@@ -25,11 +25,11 @@ The publishing stage uses:
 
 ## Committing to a repository that uses this tool
 
-When committing to a repository that uses this tool, you should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) 
+When committing to a repository that uses this tool, you should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
 format. This will allow the tool to automatically determine the next version number based on the commit history.
 
-To get an idea of the commit messages that `git-cliff` is configured to expect, you can check the [`pre-1.0-cliff.toml`](./pre-1.0-cliff.toml)  
-file for the `git.commit_parsers` field. These patterns are used to parse commit messages and group them under 
+To get an idea of the commit messages that `git-cliff` is configured to expect, you can check the [`pre-1.0-cliff.toml`](./pre-1.0-cliff.toml)
+file for the `git.commit_parsers` field. These patterns are used to parse commit messages and group them under
 categorized headings in the generated changelog.
 
 Note that the `cocogitto` bot is enabled on all Holochain repositories, and will automatically reject commits that do
@@ -37,19 +37,24 @@ not follow the Conventional Commits format. However, just because a commit is co
 not necessarily mean it will show up how you expect in the changelog. It is preferred that commits use messages which
 fit the patterns mentioned above.
 
-Currently, Holochain repositories permit either "Rebase and merge" or "Squash and merge" as the merge strategy for pull 
-requests. Unless you are working on a pull request that was opened before the introduction of this tool, it is 
+Currently, Holochain repositories permit either "Rebase and merge" or "Squash and merge" as the merge strategy for pull
+requests. Unless you are working on a pull request that was opened before the introduction of this tool, it is
 recommended to use "Rebase and merge" as the merge strategy.
 
 ## Maintaining repositories that use this tool
 
 There are a few important things to know when maintaining repositories that use this tool:
-- Release tags are filtered by branch so that only tags that are relevant to the current branch are considered. This is 
-  done to permit creating new releases from release branches, after newer versions have been published from the main 
+- Release tags are filtered by branch so that only tags that are relevant to the current branch are considered. This is
+  done to permit creating new releases from release branches, after newer versions have been published from the main
   branch.
+- A pre-release version, such as `v0.5.0-dev.0`, is marked as a pre-release on GitHub when it is created and is never
+  marked as the latest release.
+- Any other version is only marked as the latest release on GitHub if it is higher than the version of the current
+  latest release. This means that releasing `v0.3.7` from a release branch will not replace `v0.4.2` as the latest
+  release. Note that GitHub would otherwise mark every new release as the latest one, regardless of its version.
 - Although the tool used to manage versions in `Cargo.toml` files (cargo-workspaces) is capable of understanding various
   strategies for versioning crates within a workspace, this tool only supports using a single version for all crates and
-  it must be specified in the root `Cargo.toml` file. Use the `[workspace.package]` section to specify the version and 
+  it must be specified in the root `Cargo.toml` file. Use the `[workspace.package]` section to specify the version and
   then reference that version in crates as `version.workspace = true`.
 
 ## Integrating the tool into a repository
@@ -92,7 +97,7 @@ jobs:
       HRA2_GITHUB_TOKEN: ${{ secrets.HRA2_GITHUB_TOKEN }}
 ```
 
-The release [publishing workflow](https://github.com/holochain/actions/blob/main/.github/workflows/publish-release.yml) 
+The release [publishing workflow](https://github.com/holochain/actions/blob/main/.github/workflows/publish-release.yml)
 can be added with a workflow that looks like this:
 
 ```yaml
@@ -116,8 +121,8 @@ jobs:
 
 For this to work, the repository requires:
 1. A Rust project which is either a library, or a workspace configured as described above.
-2. The `hra-release` label. 
-3. The `HRA2_GITHUB_TOKEN` which is used to grant the HRA2 user access to the repository to create pull requests and 
+2. The `hra-release` label.
+3. The `HRA2_GITHUB_TOKEN` which is used to grant the HRA2 user access to the repository to create pull requests and
    releases.
 4. The `HRA2_CRATES_IO_TOKEN` which is used to publish crates to crates.io. That token must have the "publish-new" and
    "publish-update" scopes.
@@ -129,26 +134,26 @@ Look for the `AddReleaseIntegrationSupport` function which is used to add the la
 
 In the most basic case, you can publish a release by finding the "Prepare a release" workflow in the "Actions" tab and
 running it with no custom inputs. This will automatically determine the next version number based on the commit history,
-and existing tags, then generate a PR with the changes needed to prepare the release. You can then review that PR and 
+and existing tags, then generate a PR with the changes needed to prepare the release. You can then review that PR and
 when it merges, the publishing will happen automatically.
 
 For releases from release branches, the same workflow can be run, but you need to specify the branch to run from, and
 the workflow must be present on that release branch.
 
-When the version that you need to release is not the next version according to the commit history, you can override the 
+When the version that you need to release is not the next version according to the commit history, you can override the
 default semver bump by specifying the `force_version` input when running the "Prepare a release" workflow. When forcing
 a version:
 - The version must be valid semver, or a semver tag. So either `0.2.0` or `v0.2.0` are valid.
-- The `cargo-semver-checks` must still pass. So if you try to force a version that would violate semver against the 
+- The `cargo-semver-checks` must still pass. So if you try to force a version that would violate semver against the
   previous release, then the preparation will fail.
 
 Note that there are three cases where you must force a version:
 - When switching to a pre-release version. The only supported pre-release format is currently `-dev.X`, though this can
   be relaxed in the future if needed.
 - When switching from a pre-release version to a stable version.
-- After branching a release branch, and wanting to bump to a new version that is not the next semver version. For 
+- After branching a release branch, and wanting to bump to a new version that is not the next semver version. For
   example, if you have just created a `release-0.2` branch which contained the version `0.2.5`, then the next semver
-  version would be `0.2.6`, but you want to release `0.3.0` from that branch, then you need to force the version to 
+  version would be `0.2.6`, but you want to release `0.3.0` from that branch, then you need to force the version to
   `0.3.0`.
 
 ## Setting up a test environment
@@ -162,7 +167,7 @@ To start these services, run:
 docker compose up -d
 ```
 
-There is a manual setup step needed for the Git server. Navigate to `http://localhost:3000` and press the 
+There is a manual setup step needed for the Git server. Navigate to `http://localhost:3000` and press the
 "Install Gitea" button. When this process completes and you are redirected to the login page, you can proceed to the
 automated steps.
 
@@ -172,12 +177,12 @@ Use the setup script:
 nix develop -c ./scripts/run_setup.sh
 ```
 
-If this script succeeds, you should find a git token in `./scripts/git_test_token.txt` and a crates token in 
+If this script succeeds, you should find a git token in `./scripts/git_test_token.txt` and a crates token in
 `./scripts/crates_test_token.txt`.
 
->! **NOTE**: The tests are limited in what they can check. They can verify that we're using the third-party tools 
+>! **NOTE**: The tests are limited in what they can check. They can verify that we're using the third-party tools
 >  correctly, but they cannot verify the integration with GitHub. There are aspects of the integration like detecting
->  release pull requests, creating releases and GitHub-specific changelog content that cannot be tested in this 
+>  release pull requests, creating releases and GitHub-specific changelog content that cannot be tested in this
 >  repository. When making changes that impact these areas, please ensure that you test them against a real repository
 >  before releasing your changes.
 
