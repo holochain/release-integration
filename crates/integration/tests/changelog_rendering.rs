@@ -414,3 +414,63 @@ needs to be written across two lines.
         "Continuation paragraph did not stay nested under its list item. Changelog is:\n{changelog}"
     );
 }
+
+#[test]
+fn fixup_commit_ignored() {
+    let harness = TestHarness::new("changelog-fixup");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit("*", "feat: add the first thing");
+    harness.write_file_content("b.txt", "b");
+    harness.commit("*", "fixup! feat: add the first thing");
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        !changelog.contains("feat: add the first thing"),
+        "A fixup commit was added to the changelog. Changelog is:\n{changelog}"
+    );
+}
+
+#[test]
+fn amend_commit_ignored() {
+    let harness = TestHarness::new("changelog-amend");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit("*", "feat: add the first thing");
+    harness.write_file_content("b.txt", "b");
+    harness.commit("*", "amend! feat: add the first thing");
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        !changelog.contains("feat: add the first thing"),
+        "An amend commit was added to the changelog. Changelog is:\n{changelog}"
+    );
+}
+
+#[test]
+fn squash_commit_ignored() {
+    let harness = TestHarness::new("changelog-squash");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit("*", "feat: add the first thing");
+    harness.write_file_content("b.txt", "b");
+    harness.commit("*", "squash! feat: add the first thing");
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        !changelog.contains("feat: add the first thing"),
+        "A squash commit was added to the changelog. Changelog is:\n{changelog}"
+    );
+}
