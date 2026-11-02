@@ -118,7 +118,7 @@ commit_parsers = [
     # preprocessor above treats as a git comment. A subject is only an artifact
     # when it is a comment git wrote, so `#123: fix startup` is left alone.
     { message = '^#[ \t]', skip = true },
-    { message = '^(fixup|squash)!', skip = true },
+    { message = '^(fixup|squash|amend)!', skip = true },
     { message = '^--fixup=', skip = true },
     { field = "author.name", pattern = "dependabot\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
     { field = "author.name", pattern = "github-actions\\[bot\\]", group = "<!-- 10 -->Automated Changes"},
