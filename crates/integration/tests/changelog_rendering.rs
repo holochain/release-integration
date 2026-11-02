@@ -302,3 +302,86 @@ A trailing paragraph after the list.",
         "Trailing paragraph was not nested under the list. Changelog is:\n{changelog}"
     );
 }
+
+/// Commits marked as breaking should be marked as such in the Changelog.
+#[test]
+fn breaking_change_without_explanation() {
+    let harness = TestHarness::new("changelog-breaking");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit("*", "feat!: added a breaking change");
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains("- \\[**BREAKING**\\] Added a breaking change"),
+        "Breaking change was not rendered as such. Changelog is:\n{changelog}"
+    );
+
+    assert!(
+        !changelog.contains("**Breaking Change**"),
+        "No explanation was given so it should not be rendered. Changelog is:\n{changelog}"
+    );
+}
+
+/// Commits marked as breaking and with an explanation should be marked as such in the Changelog.
+#[test]
+fn breaking_change_with_explanation() {
+    let harness = TestHarness::new("changelog-breaking-explanation");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat!: added a breaking change
+
+BREAKING CHANGE: This explains why it is breaking",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains("- \\[**BREAKING**\\] Added a breaking change"),
+        "Breaking change was not rendered as such. Changelog is:\n{changelog}"
+    );
+
+    assert!(
+        changelog.contains("  - **Breaking Change**: This explains why it is breaking"),
+        "An explanation was given but was not rendered. Changelog is:\n{changelog}"
+    );
+}
+
+/// Commits not marked as breaking with the exclamation `!` but do have a breaking change
+/// explanation should be marked as breaking in the Changelog.
+#[test]
+fn breaking_change_without_mark_but_with_explanation() {
+    let harness = TestHarness::new("changelog-breaking-explanation-no-mark");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat: a breaking change but without marking with `!`
+
+BREAKING CHANGE: This explains why it is breaking",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains("- \\[**BREAKING**\\] A breaking change but without marking with `!`"),
+        "Breaking change was not rendered as such. Changelog is:\n{changelog}"
+    );
+
+    assert!(
+        changelog.contains("  - **Breaking Change**: This explains why it is breaking"),
+        "An explanation was given but was not rendered. Changelog is:\n{changelog}"
+    );
+}
