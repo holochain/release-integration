@@ -380,3 +380,37 @@ BREAKING CHANGE: This explains why it is breaking",
         "An explanation was given but was not rendered. Changelog is:\n{changelog}"
     );
 }
+
+/// List items as part of a commit body can overflow onto the next line, these must be rendered on
+/// the same line.
+#[test]
+fn list_item_with_a_wrapping_line_renders_as_a_single_line() {
+    let harness = TestHarness::new("changelog-list-item-continuation");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat: add the first thing
+
+Lead-in prose:
+
+- More information about the changes that is really long and will overflow and therefore
+needs to be written across two lines.
+- Second item.",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains(
+            "- Add the first thing
+  - Lead-in prose:
+    - More information about the changes that is really long and will overflow and therefore needs to be written across two lines.
+    - Second item."
+        ),
+        "Continuation paragraph did not stay nested under its list item. Changelog is:\n{changelog}"
+    );
+}
