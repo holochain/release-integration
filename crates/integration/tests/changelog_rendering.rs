@@ -207,3 +207,98 @@ Real body text.
     // issue-reference subject above, which is an unconventional commit rather than an artifact.
     // The assertions above already establish that no artifact reaches the changelog at all.
 }
+
+/// The commit body is written as a sub-list under the message due to Markdown styling constraints.
+#[test]
+fn commit_body_is_rendered_as_sublist() {
+    let harness = TestHarness::new("changelog-body");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat: some summary of the changes
+
+More information about the changes.",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains(
+            "- Some summary of the changes
+  - More information about the changes."
+        ),
+        "Body was not nested under the heading. Changelog is:\n{changelog}"
+    );
+}
+
+/// The commit body is written as a sub-list under the message due to Markdown styling constraints.
+///
+/// Make sure that wrapped lines are rendered on the same line
+#[test]
+fn commit_body_with_a_long_line_is_rendered_as_one_line() {
+    let harness = TestHarness::new("changelog-long-body");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat: some summary of the changes
+
+More information about the changes that is really long and will overflow and therefore
+needs to be written across two lines.",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains(
+            "- Some summary of the changes
+  - More information about the changes that is really long and will overflow and therefore needs to be written across two lines.",
+        ),
+        "Wrapped body was not written on one line. Changelog is:\n{changelog}"
+    );
+}
+
+/// The commit body is written as a sub-list under the message due to Markdown styling constraints.
+///
+/// This test checks that the body is correctly rendered as a sub-list, even if that body has a list
+/// itself.
+#[test]
+fn trailing_paragraph_after_list_is_nested_under_it() {
+    let harness = TestHarness::new("changelog-trailing-paragraph");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat: add the first thing
+
+Some lead-in prose:
+
+- an item
+- another item
+
+A trailing paragraph after the list.",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains(
+            "- Add the first thing
+  - Some lead-in prose:
+    - an item
+    - another item
+  - A trailing paragraph after the list."
+        ),
+        "Trailing paragraph was not nested under the list. Changelog is:\n{changelog}"
+    );
+}
