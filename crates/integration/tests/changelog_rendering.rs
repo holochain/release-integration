@@ -474,3 +474,31 @@ fn squash_commit_ignored() {
         "A squash commit was added to the changelog. Changelog is:\n{changelog}"
     );
 }
+
+/// A body paragraph starting with a bare dash run not followed by a space, such as a CLI flag name,
+/// is not a list marker and must be processed like any other paragraph.
+#[test]
+fn body_paragraph_starting_with_a_flag_name() {
+    let harness = TestHarness::new("changelog-flag-paragraph");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat: add the first thing
+
+--verbose flag enables logging",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains(
+            "- Add the first thing
+  - --verbose flag enables logging"
+        ),
+        "Leading dashes on a non-list paragraph were not stripped. Changelog is:\n{changelog}"
+    );
+}
