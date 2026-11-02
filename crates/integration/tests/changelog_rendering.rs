@@ -1,8 +1,6 @@
 //! Changelog rendering tests.
 //!
-//! Unlike the other tests in this crate, nothing here pushes to a remote or publishes a crate,
-//! because changelog generation is entirely local. That means this file, and only this file, can
-//! run without the Gitea and registry services, so CI runs it on every pull request.
+//! The tests in this module must be runnable locally and in CI so cannot rely on external services.
 
 use integration::{ChangelogConfig, TestHarness};
 
@@ -15,9 +13,6 @@ use integration::{ChangelogConfig, TestHarness};
 /// - Repository mechanics, such as the `# Conflicts:` block left behind by a conflicted rebase,
 ///   are not published as release notes.
 /// - Rebase and squash artifacts that ended up as commit subjects are left out entirely.
-///
-/// Unlike the other tests in this file, this one never pushes, because changelog generation is
-/// purely local. That keeps it runnable without the Gitea and registry services.
 #[test]
 fn commit_body_rendering() {
     let harness = TestHarness::new("changelog-commit-body");
