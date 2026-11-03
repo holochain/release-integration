@@ -39,7 +39,17 @@ body = """
               {%- endfor -%}
           {% endif -%}
           {% if commit.breaking and commit.breaking_description != commit.message %}
-          {%- raw %}  {% endraw %}- **Breaking Change**: {{ commit.breaking_description | upper_first }}
+              {%- set breaking_chunks = commit.breaking_description | split(pat="@@ CLIFF LIST ITEM @@") %}
+              {%- set_global breaking_lines = [breaking_chunks | first | replace(from="\n", to=" ") | trim | upper_first] %}
+              {%- for chunk in breaking_chunks %}
+                  {%- if not loop.first %}
+                      {%- set item_text = chunk | replace(from="\n", to=" ") | trim %}
+                      {%- if item_text %}
+                          {%- set_global breaking_lines = breaking_lines | concat(with="    - " ~ item_text) %}
+                      {%- endif %}
+                  {%- endif %}
+              {%- endfor %}
+              {%- raw %}  {% endraw %}- **Breaking Change**: {{ breaking_lines | join(sep="\n") }}
           {% endif -%}
     {% endfor -%}
 {% endfor -%}

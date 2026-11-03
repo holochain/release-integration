@@ -351,6 +351,40 @@ BREAKING CHANGE: This explains why it is breaking",
     );
 }
 
+#[test]
+fn breaking_change_explanation_with_bulleted_list_renders_as_a_sublist() {
+    let harness = TestHarness::new("changelog-breaking-explanation-list");
+
+    harness.add_standard_gitignore();
+
+    harness.write_file_content("a.txt", "a");
+    harness.commit(
+        "*",
+        "feat!: added a breaking change
+
+BREAKING CHANGE: This breaks things for the following reasons:
+- first reason
+- second reason",
+    );
+
+    harness.generate_changelog(ChangelogConfig::Pre1Point0Cliff, None);
+    let changelog = harness.read_file_content("CHANGELOG.md");
+
+    assert!(
+        changelog.contains(
+            "  - **Breaking Change**: This breaks things for the following reasons:
+    - first reason
+    - second reason"
+        ),
+        "Explanation was not rendered with a nested sublist. Changelog is:\n{changelog}"
+    );
+
+    assert!(
+        !changelog.contains("@@ CLIFF LIST ITEM @@"),
+        "Internal list-item marker leaked into the changelog. Changelog is:\n{changelog}"
+    );
+}
+
 /// Commits not marked as breaking with the exclamation `!` but do have a breaking change
 /// explanation should be marked as breaking in the Changelog.
 #[test]
