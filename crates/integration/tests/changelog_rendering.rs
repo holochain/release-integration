@@ -27,7 +27,8 @@ Lead in:
 
     assert!(
         changelog.contains(
-            "  - Lead in:
+            "- Add a nested list
+  - Lead in:
     - parent item
     - child item
     - second parent"
@@ -56,7 +57,8 @@ fn list_without_lead_in_stays_at_outer_level() {
 
     assert!(
         changelog.contains(
-            "  - alpha item
+            "- Correct the second thing
+  - alpha item
   - beta item"
         ),
         "List without a lead-in was not rendered at the outer level. Changelog is:\n{changelog}"
@@ -85,7 +87,10 @@ Real body text.
     let changelog = harness.read_file_content("CHANGELOG.md");
 
     assert!(
-        changelog.contains("Real body text."),
+        changelog.contains(
+            "- Tidy the third thing
+  - Real body text."
+        ),
         "The real body text was dropped along with the conflict metadata. Changelog is:\n{changelog}"
     );
     assert!(
@@ -134,7 +139,10 @@ fn body_line_opening_with_issue_reference_is_kept() {
     let changelog = harness.read_file_content("CHANGELOG.md");
 
     assert!(
-        changelog.contains("- #123 was the original report"),
+        changelog.contains(
+            "- Tidy the third thing
+  - #123 was the original report"
+        ),
         "A body line opening with an issue reference was mangled. Changelog is:\n{changelog}"
     );
 }
@@ -313,13 +321,11 @@ BREAKING CHANGE: This explains why it is breaking",
     let changelog = harness.read_file_content("CHANGELOG.md");
 
     assert!(
-        changelog.contains("- \\[**BREAKING**\\] Added a breaking change"),
-        "Breaking change was not rendered as such. Changelog is:\n{changelog}"
-    );
-
-    assert!(
-        changelog.contains("  - **Breaking Change**: This explains why it is breaking"),
-        "An explanation was given but was not rendered. Changelog is:\n{changelog}"
+        changelog.contains(
+            "- \\[**BREAKING**\\] Added a breaking change
+  - **Breaking Change**: This explains why it is breaking"
+        ),
+        "Breaking change was not rendered with its explanation. Changelog is:\n{changelog}"
     );
 }
 
@@ -344,7 +350,8 @@ BREAKING CHANGE: This breaks things for the following reasons:
 
     assert!(
         changelog.contains(
-            "  - **Breaking Change**: This breaks things for the following reasons:
+            "- \\[**BREAKING**\\] Added a breaking change
+  - **Breaking Change**: This breaks things for the following reasons:
     - first reason
     - second reason"
         ),
@@ -377,13 +384,11 @@ BREAKING CHANGE: This explains why it is breaking",
     let changelog = harness.read_file_content("CHANGELOG.md");
 
     assert!(
-        changelog.contains("- \\[**BREAKING**\\] A breaking change but without marking with `!`"),
-        "Breaking change was not rendered as such. Changelog is:\n{changelog}"
-    );
-
-    assert!(
-        changelog.contains("  - **Breaking Change**: This explains why it is breaking"),
-        "An explanation was given but was not rendered. Changelog is:\n{changelog}"
+        changelog.contains(
+            "- \\[**BREAKING**\\] A breaking change but without marking with `!`
+  - **Breaking Change**: This explains why it is breaking"
+        ),
+        "Breaking change was not rendered with its explanation. Changelog is:\n{changelog}"
     );
 }
 
